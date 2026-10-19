@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { ChevronDown, Heart, Menu, Search, ShoppingCart, Sprout, User, X } from "lucide-react";
+import { ChevronDown, Heart, Menu, Search, ShoppingCart, User, X } from "lucide-react";
 import { AppLink } from "./AppLink";
+import logoHorizontal from "@/assets/aaradhya-logo-horizontal.png";
 import { brand, categoryPages, megaMenus, products } from "@/data/catalog";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -55,18 +56,12 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-cream/95 backdrop-blur">
       <div className="mx-auto grid max-w-7xl grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 sm:px-6 lg:gap-6 lg:px-8">
-        <Link to="/" className="flex min-w-0 items-center gap-2">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
-            <Sprout size={20} />
-          </span>
-          <span className="min-w-0">
-            <span className="block truncate font-display text-lg font-semibold leading-tight text-leaf-deep">
-              {brand.name}
-            </span>
-            <span className="hidden text-[10px] uppercase tracking-[0.18em] text-muted-foreground sm:block">
-              {brand.tagline}
-            </span>
-          </span>
+        <Link to="/" className="flex min-w-0 items-center">
+          <img
+            src={logoHorizontal}
+            alt={`${brand.name} — ${brand.tagline}`}
+            className="h-12 w-auto max-w-[190px] object-contain sm:h-14 sm:max-w-[240px]"
+          />
         </Link>
 
         <div ref={boxRef} className="relative hidden lg:block">
@@ -151,12 +146,6 @@ export function Header() {
               </span>
             ) : null}
           </Link>
-          <Link
-            to="/wholesale/register"
-            className="hidden rounded-full bg-accent px-4 py-2.5 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent/85 md:inline-flex"
-          >
-            B2B / Wholesale
-          </Link>
           <button
             type="button"
             aria-label="Open menu"
@@ -169,7 +158,7 @@ export function Header() {
       </div>
 
       <nav aria-label="Main" className="hidden border-t border-border bg-card lg:block">
-        <ul className="mx-auto flex max-w-7xl items-center gap-1 px-4 sm:px-6 lg:px-8">
+        <ul className="mx-auto flex max-w-7xl items-center justify-center gap-1 px-4 sm:px-6 lg:px-8">
           {navLinks.map((l) => (
             <li
               key={l.label}
@@ -250,18 +239,12 @@ export function Header() {
                   />
                 </form>
 
-                <div className="mb-4 grid grid-cols-2 gap-2">
+                <div className="mb-4">
                   <AppLink
                     to="/category/all"
-                    className="rounded-full bg-primary px-3 py-2.5 text-center text-sm font-medium text-primary-foreground"
+                    className="block rounded-full bg-primary px-3 py-2.5 text-center text-sm font-medium text-primary-foreground"
                   >
                     Retail Shop
-                  </AppLink>
-                  <AppLink
-                    to="/wholesale/register"
-                    className="rounded-full bg-accent px-3 py-2.5 text-center text-sm font-semibold text-accent-foreground"
-                  >
-                    B2B Registration
                   </AppLink>
                 </div>
 

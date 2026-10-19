@@ -89,7 +89,7 @@ export async function ensureQuotationPdf(quotationId: number) {
     .fontSize(9)
     .fillColor("#4d5f53")
     .text("Survey No. 42, Green Belt Road, Talegaon, Pune, Maharashtra 410507");
-  document.text("+91 98765 43210  |  b2b@verdantroots.in  |  GST: 27AAAAA0000A1Z5");
+  document.text("+91 77449 02148  |  rmane9089@gmail.com  |  GST: 27AAAAA0000A1Z5");
   document
     .moveDown()
     .strokeColor("#1f5d3b")

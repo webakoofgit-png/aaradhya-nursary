@@ -1,6 +1,8 @@
-import { Facebook, Instagram, Mail, MapPin, Phone, Sprout, Youtube, Clock, MessageCircle } from "lucide-react";
+import { Facebook, Instagram, Mail, MapPin, Phone, Clock } from "lucide-react";
 import { AppLink } from "./AppLink";
+import { WhatsAppIcon } from "./WhatsAppIcon";
 import { brand, contact } from "@/data/catalog";
+import logoHorizontal from "@/assets/aaradhya-logo-horizontal.png";
 
 const shop = [
   ["Plants", "/category/plants"],
@@ -34,23 +36,28 @@ export function Footer() {
     <footer className="mt-16 bg-leaf-deep text-primary-foreground">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-5 lg:px-8">
         <div className="lg:col-span-1">
-          <div className="flex items-center gap-2">
-            <span className="grid h-10 w-10 place-items-center rounded-full bg-accent text-accent-foreground">
-              <Sprout size={20} />
-            </span>
-            <span className="font-display text-lg">{brand.name}</span>
+          <div className="w-fit rounded-xl bg-card px-3 py-2">
+            <img
+              src={logoHorizontal}
+              alt={`${brand.name} — ${brand.tagline}`}
+              className="h-14 w-auto max-w-[230px] object-contain"
+            />
           </div>
           <p className="mt-4 text-sm text-primary-foreground/75">
-            A Pune-based nursery growing healthy plants for Indian homes, gardens and businesses since 2009.
+            A Pune-based nursery growing healthy plants for Indian homes, gardens and businesses
+            since 2009.
           </p>
           <div className="mt-5 flex gap-2">
-            {[Instagram, Facebook, Youtube].map((Icon, i) => (
+            {[
+              { Icon: Instagram, href: contact.instagramHref, label: "Instagram" },
+              { Icon: Facebook, href: contact.facebookHref, label: "Facebook" },
+            ].map(({ Icon, href, label }) => (
               <a
-                key={i}
-                href="https://instagram.com"
+                key={label}
+                href={href}
                 target="_blank"
                 rel="noreferrer"
-                aria-label="Social profile"
+                aria-label={`Follow us on ${label}`}
                 className="grid h-9 w-9 place-items-center rounded-full bg-primary-foreground/10 transition-colors hover:bg-accent hover:text-accent-foreground"
               >
                 <Icon size={16} />
@@ -91,7 +98,7 @@ export function Footer() {
               </a>
             </li>
             <li className="flex gap-2">
-              <MessageCircle size={16} className="shrink-0" />
+              <WhatsAppIcon size={16} className="shrink-0" />
               <a href={contact.whatsappHref} className="hover:text-accent">
                 WhatsApp
               </a>
@@ -103,7 +110,12 @@ export function Footer() {
               </a>
             </li>
             <li className="flex gap-2">
-              <Clock size={16} className="mt-0.5 shrink-0" /> {contact.hours}
+              <Clock size={16} className="mt-0.5 shrink-0" />
+              <span>
+                Mon–Sat: <span className="whitespace-nowrap">9:00 AM–5:30 PM</span>
+                <br />
+                Sun: <span className="whitespace-nowrap">9:00 AM–1:00 PM</span>
+              </span>
             </li>
           </ul>
         </div>
@@ -120,7 +132,9 @@ export function Footer() {
             <span>100% secure payments</span>
           </div>
           <div className="flex flex-wrap items-center gap-4">
-            <span>© {new Date().getFullYear()} {brand.name}. All rights reserved.</span>
+            <span>
+              © {new Date().getFullYear()} {brand.name}. All rights reserved.
+            </span>
             <AppLink to="/privacy-policy" className="hover:text-accent">
               Privacy Policy
             </AppLink>

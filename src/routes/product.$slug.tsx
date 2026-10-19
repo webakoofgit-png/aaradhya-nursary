@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Heart, Share2, ShieldCheck, ShoppingCart, Truck } from "lucide-react";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
+import { AppLink } from "@/components/site/AppLink";
 import { Stars } from "@/components/site/Stars";
 import { ProductCarousel } from "@/components/site/ProductCarousel";
 import {
@@ -45,7 +46,7 @@ function ProductPage() {
   const product = getProduct(slug);
   const { addToCart, toggleWishlist, inWishlist, priceOf, markViewed, recent } = useStore();
   const [qty, setQty] = useState(1);
-  const [size, setSize] = useState("Medium");
+  const size = "3 inch";
   const [pot, setPot] = useState("Nursery Pot");
   const [active, setActive] = useState(0);
   const [pin, setPin] = useState("");
@@ -130,19 +131,10 @@ function ProductPage() {
               {product.inStock ? "In stock — ships in 24 hours" : "Currently out of stock"}
             </p>
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <label className="text-sm">
-                Plant size
-                <select
-                  value={size}
-                  onChange={(e) => setSize(e.target.value)}
-                  className="mt-1 h-11 w-full rounded-xl border border-border bg-card px-3 text-sm"
-                >
-                  {["Small", "Medium", "Large"].map((s) => (
-                    <option key={s}>{s}</option>
-                  ))}
-                </select>
-              </label>
+            <div className="mt-6 grid gap-4">
+              <p className="text-sm">
+                Available sizes: <span className="font-medium">3 inch / 4 inch / 5 inch</span>
+              </p>
               <label className="text-sm">
                 Pot option
                 <select
@@ -218,6 +210,12 @@ function ProductPage() {
                 <Share2 size={17} />
               </button>
             </div>
+            <AppLink
+              to="/wholesale/register"
+              className="mt-4 inline-flex items-center justify-center rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent/85"
+            >
+              B2B / Wholesale
+            </AppLink>
 
             <form
               onSubmit={(e) => {

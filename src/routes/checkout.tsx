@@ -21,8 +21,9 @@ export const Route = createFileRoute("/checkout")({
 });
 
 function Checkout() {
-  const { subtotal, cart } = useStore();
-  const shipping = subtotal > 999 || subtotal === 0 ? 0 : 79;
+  const { subtotal, plantOfferDiscount, cart } = useStore();
+  const adjustedSubtotal = subtotal - plantOfferDiscount;
+  const shipping = adjustedSubtotal > 999 || adjustedSubtotal === 0 ? 0 : 79;
   return (
     <div>
       <PageHeader title="Checkout" subtitle="Secure checkout — your details are encrypted." trail={[{ label: "Cart", to: "/cart" }, { label: "Checkout" }]} />
@@ -56,8 +57,10 @@ function Checkout() {
           <p className="mt-2 text-sm text-muted-foreground">{cart.length} item(s) in your cart</p>
           <dl className="mt-4 space-y-2 text-sm">
             <div className="flex justify-between"><dt>Subtotal</dt><dd>{inr(subtotal)}</dd></div>
+            {plantOfferDiscount > 0 ? <div className="flex justify-between text-primary"><dt>50% off third eligible plant</dt><dd>-{inr(plantOfferDiscount)}</dd></div> : null}
+            <div className="flex justify-between"><dt>Subtotal after offers</dt><dd>{inr(adjustedSubtotal)}</dd></div>
             <div className="flex justify-between"><dt>Shipping</dt><dd>{shipping === 0 ? "Free" : inr(shipping)}</dd></div>
-            <div className="flex justify-between border-t border-border pt-2 font-semibold"><dt>Total</dt><dd>{inr(subtotal + shipping)}</dd></div>
+            <div className="flex justify-between border-t border-border pt-2 font-semibold"><dt>Total</dt><dd>{inr(adjustedSubtotal + shipping)}</dd></div>
           </dl>
           <AppLink to="/cart" className="mt-4 block text-center text-sm text-primary hover:underline">Back to cart</AppLink>
         </aside>

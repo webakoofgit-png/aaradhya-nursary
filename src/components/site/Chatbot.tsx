@@ -32,7 +32,7 @@ const quick: { label: string; reply: string }[] = [
   {
     label: "Talk to an Expert",
     reply:
-      "Connecting you to a human representative from our horticulture team. You are now being redirected — please call +91 98765 43210 or continue on WhatsApp and our expert will respond shortly.",
+      "Connecting you to a human representative from our horticulture team. You are now being redirected — please call +91 77449 02148 or continue on WhatsApp and our expert will respond shortly.",
   },
 ];
 
@@ -61,7 +61,7 @@ export function Chatbot() {
           from: "bot",
           text:
             reply ??
-            "Thanks for your message! Our plant care team will reply here shortly. For an instant answer, pick one of the quick options or call us on +91 98765 43210.",
+            "Thanks for your message! Our plant care team will reply here shortly. For an instant answer, pick one of the quick options or call us on +91 77449 02148.",
         },
       ]);
     }, 900);

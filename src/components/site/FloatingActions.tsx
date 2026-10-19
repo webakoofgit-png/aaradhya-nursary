@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { ArrowUp, Phone, MessageCircle } from "lucide-react";
+import { ArrowUp, Phone } from "lucide-react";
 import { contact } from "@/data/catalog";
+import { WhatsAppIcon } from "./WhatsAppIcon";
 
 export function FloatingActions() {
   const [showTop, setShowTop] = useState(false);
@@ -25,10 +26,14 @@ export function FloatingActions() {
             Chat on WhatsApp
           </span>
           <span className="grid h-12 w-12 place-items-center rounded-full bg-primary text-primary-foreground shadow-lift transition-transform hover:scale-105 pulse">
-            <MessageCircle size={20} />
+            <WhatsAppIcon size={21} />
           </span>
         </a>
-        <a href={contact.phoneHref} className="group flex items-center gap-2" aria-label="Call the nursery">
+        <a
+          href={contact.phoneHref}
+          className="group flex items-center gap-2"
+          aria-label="Call the nursery"
+        >
           <span className="pointer-events-none rounded-full bg-card px-3 py-1.5 text-xs font-medium opacity-0 shadow-soft transition-opacity group-hover:opacity-100">
             Call {contact.phone}
           </span>
@@ -56,7 +61,7 @@ export function FloatingActions() {
           rel="noreferrer"
           className="flex items-center justify-center gap-2 py-3 text-sm font-medium text-primary"
         >
-          <MessageCircle size={17} /> WhatsApp
+          <WhatsAppIcon size={18} /> WhatsApp
         </a>
         <a
           href={contact.phoneHref}

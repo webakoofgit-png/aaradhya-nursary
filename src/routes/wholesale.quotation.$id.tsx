@@ -1,7 +1,8 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { Download, MessageCircle, Printer } from "lucide-react";
+import { Download, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { contact } from "@/data/catalog";
+import { WhatsAppIcon } from "@/components/site/WhatsAppIcon";
 import {
   downloadQuotationPdf,
   getB2bSession,
@@ -111,7 +112,7 @@ function QuotationPreview() {
           onClick={whatsapp}
           className="inline-flex items-center gap-2 rounded-md bg-[#217a43] px-4 py-2 text-sm text-white"
         >
-          <MessageCircle size={16} />
+          <WhatsAppIcon size={16} />
           WhatsApp enquiry
         </button>
       </div>

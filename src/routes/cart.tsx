@@ -19,8 +19,9 @@ export const Route = createFileRoute("/cart")({
 });
 
 function CartPage() {
-  const { cart, setQty, removeFromCart, subtotal, toggleWishlist, priceOf } = useStore();
-  const shipping = subtotal > 999 || subtotal === 0 ? 0 : 79;
+  const { cart, setQty, removeFromCart, subtotal, plantOfferDiscount, toggleWishlist, priceOf } = useStore();
+  const adjustedSubtotal = subtotal - plantOfferDiscount;
+  const shipping = adjustedSubtotal > 999 || adjustedSubtotal === 0 ? 0 : 79;
 
   return (
     <div>
@@ -68,8 +69,10 @@ function CartPage() {
           </form>
           <dl className="mt-4 space-y-2 text-sm">
             <div className="flex justify-between"><dt>Subtotal</dt><dd>{inr(subtotal)}</dd></div>
+            {plantOfferDiscount > 0 ? <div className="flex justify-between text-primary"><dt>50% off third eligible plant</dt><dd>-{inr(plantOfferDiscount)}</dd></div> : null}
+            <div className="flex justify-between"><dt>Subtotal after offers</dt><dd>{inr(adjustedSubtotal)}</dd></div>
             <div className="flex justify-between"><dt>Shipping</dt><dd>{shipping === 0 ? "Free" : inr(shipping)}</dd></div>
-            <div className="flex justify-between border-t border-border pt-2 font-semibold"><dt>Total</dt><dd>{inr(subtotal + shipping)}</dd></div>
+            <div className="flex justify-between border-t border-border pt-2 font-semibold"><dt>Total</dt><dd>{inr(adjustedSubtotal + shipping)}</dd></div>
           </dl>
           <AppLink to="/checkout" className="mt-5 block rounded-full bg-primary py-3 text-center text-sm font-medium text-primary-foreground">Proceed to Checkout</AppLink>
           <AppLink to="/category/all" className="mt-3 block rounded-full border border-border py-3 text-center text-sm">Continue Shopping</AppLink>

@@ -22,6 +22,7 @@ type StoreValue = {
   markViewed: (slug: string) => void;
   cartCount: number;
   subtotal: number;
+  plantOfferDiscount: number;
   priceOf: (p: Product) => number;
 };
 
@@ -58,6 +59,26 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<StoreValue>(() => {
     const priceOf = (p: Product) => p.price;
+    const eligiblePlantLines = cart
+      .map((line) => ({ line, product: products.find((p) => p.slug === line.slug) }))
+      .filter(
+        (entry): entry is { line: CartLine; product: Product } =>
+          entry.product !== undefined &&
+          ["indoor-plants", "outdoor-plants", "flowering-plants"].includes(
+            entry.product.categorySlug,
+          ) &&
+          (entry.product.mrp - entry.product.price) / entry.product.mrp >= 0.3,
+      );
+    let freePlants = Math.floor(
+      eligiblePlantLines.reduce((sum, entry) => sum + entry.line.qty, 0) / 3,
+    );
+    const plantOfferDiscount = eligiblePlantLines
+      .sort((a, b) => a.product.price - b.product.price)
+      .reduce((discount, entry) => {
+        const freeHere = Math.min(freePlants, entry.line.qty);
+        freePlants -= freeHere;
+        return discount + freeHere * entry.product.price * 0.5;
+      }, 0);
 
     return {
       cart,
@@ -99,6 +120,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const p = products.find((x) => x.slug === l.slug);
         return sum + (p ? priceOf(p) * l.qty : 0);
       }, 0),
+      plantOfferDiscount,
       priceOf,
     };
   }, [cart, wishlist, recent]);

@@ -33,12 +33,22 @@ function CategoryPage() {
   const cat = getCategory(slug);
   if (!cat) return null;
   return (
-    <ProductListing
-      title={cat.title}
-      blurb={cat.blurb}
-      items={products.filter(cat.match)}
-      bannerImage={images.bannerSeasonal}
-      crumbTrail={[{ label: "Shop", to: "/category/all" }, { label: cat.title }]}
-    />
+    <>
+      {slug === "offers" ? (
+        <div className="mx-auto mt-6 max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="rounded-2xl bg-primary px-5 py-4 text-center text-primary-foreground">
+            <p className="font-semibold">Buy any 2 eligible plants, get 50% off the third</p>
+            <p className="mt-1 text-sm">Offer applies to sale plants. The lowest priced eligible plant gets 50% off.</p>
+          </div>
+        </div>
+      ) : null}
+      <ProductListing
+        title={cat.title}
+        blurb={cat.blurb}
+        items={products.filter(cat.match)}
+        bannerImage={images.bannerSeasonal}
+        crumbTrail={[{ label: "Shop", to: "/category/all" }, { label: cat.title }]}
+      />
+    </>
   );
 }

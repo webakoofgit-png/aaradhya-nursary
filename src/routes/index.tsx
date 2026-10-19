@@ -1,11 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Leaf, ShieldCheck, Package, Truck, Lock, Store, Sprout, Building2 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Building2, Compass, Home as HomeIcon, Moon, PawPrint, Sprout, Sun, Wind } from "lucide-react";
 import { HeroSlider } from "@/components/site/HeroSlider";
 import { CategoryStrip } from "@/components/site/CategoryStrip";
 import { ProductCarousel } from "@/components/site/ProductCarousel";
 import { SectionHeading } from "@/components/site/SectionHeading";
 import { AppLink } from "@/components/site/AppLink";
 import { Stars } from "@/components/site/Stars";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+  type CarouselApi,
+} from "@/components/ui/carousel";
 import {
   blogs,
   byCategory,
@@ -14,7 +23,6 @@ import {
   products,
   requirementShortcuts,
   testimonials,
-  trustFeatures,
 } from "@/data/catalog";
 
 export const Route = createFileRoute("/")({
@@ -40,9 +48,19 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-const icons: Record<string, typeof Leaf> = { ShieldCheck, Package, Truck, Lock, Leaf, Store };
-
 function Home() {
+  const [reviewsApi, setReviewsApi] = useState<CarouselApi>();
+  const [reviewsPaused, setReviewsPaused] = useState(false);
+  const setReviewsCarouselApi = useCallback((api: CarouselApi) => setReviewsApi(api), []);
+
+  useEffect(() => {
+    if (!reviewsApi || reviewsPaused || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+    const timer = window.setInterval(() => reviewsApi.scrollNext(), 5000);
+    return () => window.clearInterval(timer);
+  }, [reviewsApi, reviewsPaused]);
+
   return (
     <>
       <HeroSlider />
@@ -97,39 +115,50 @@ function Home() {
 
       <CategoryStrip />
 
-      <section className="bg-secondary/60 py-8">
-        <div className="no-scrollbar mx-auto flex max-w-7xl gap-4 overflow-x-auto px-4 sm:px-6 lg:grid lg:grid-cols-6 lg:overflow-visible lg:px-8">
-          {trustFeatures.map((t) => {
-            const Icon = icons[t.icon] ?? Leaf;
-            return (
-              <div
-                key={t.title}
-                className="flex w-56 shrink-0 flex-col items-center gap-2 rounded-2xl bg-card p-4 text-center shadow-soft lg:w-auto"
-              >
-                <Icon size={22} className="text-primary" />
-                <p className="text-sm font-semibold">{t.title}</p>
-                <p className="text-xs text-muted-foreground">{t.text}</p>
-              </div>
-            );
-          })}
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="grid overflow-hidden rounded-2xl bg-leaf-deep text-primary-foreground md:grid-cols-[1.05fr_0.95fr]">
+          <img
+            src={images.aboutImg}
+            alt="Plants at Aaradhya rose nursary in Pune"
+            loading="lazy"
+            className="h-64 w-full object-cover md:h-full md:min-h-[360px]"
+          />
+          <div className="flex flex-col justify-center px-6 py-8 sm:px-10 sm:py-12">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+              Talegaon, Pune · Since 2009
+            </p>
+            <h2 className="mt-4 max-w-lg font-display text-3xl leading-tight sm:text-4xl">
+              Good plants take a little care before they reach your home.
+            </h2>
+            <p className="mt-4 max-w-lg text-sm leading-7 text-primary-foreground/80">
+              We are a Pune-based nursery supplying plants and gardening essentials across India.
+              Plants are hardened for local conditions and checked before dispatch.
+            </p>
+            <AppLink
+              to="/about"
+              className="mt-6 w-fit border-b border-accent pb-1 text-sm font-medium text-accent transition-colors hover:text-primary-foreground"
+            >
+              A little more about us <span aria-hidden="true">→</span>
+            </AppLink>
+          </div>
         </div>
       </section>
 
       <ProductCarousel
         title="Bestselling Plants"
-        subtitle="Loved by thousands of Indian gardeners"
+        subtitle="Popular picks from our plant range"
         viewAllTo="/category/bestsellers"
         items={byGroup("bestsellers").slice(0, 4)}
       />
       <ProductCarousel
         title="New Arrivals"
-        subtitle="Fresh from the nursery this season"
+        subtitle="Recently added to the nursery"
         viewAllTo="/category/new-arrivals"
         items={byGroup("new").slice(0, 4)}
       />
       <ProductCarousel
         title="Indoor Plants"
-        subtitle="Air purifying greens for every room"
+        subtitle="Plants chosen for indoor spaces"
         viewAllTo="/category/indoor-plants"
         items={byCategory("indoor-plants").slice(0, 4)}
       />
@@ -158,14 +187,8 @@ function Home() {
         items={byCategory("gardening-kits").slice(0, 4)}
       />
       <ProductCarousel
-        title="Wholesale Bestsellers"
-        subtitle="Bulk favourites for businesses"
-        viewAllTo="/category/wholesale-products"
-        items={products.filter((p) => p.wholesale).slice(0, 4)}
-      />
-      <ProductCarousel
         title="Special Offers"
-        subtitle="Limited period nursery deals"
+        subtitle="Buy two eligible sale plants and get 50% off the third"
         viewAllTo="/category/offers"
         items={products.filter((p) => (p.mrp - p.price) / p.mrp >= 0.3).slice(0, 4)}
       />
@@ -181,10 +204,10 @@ function Home() {
             <AppLink
               key={r.slug}
               to={`/category/${r.slug}`}
-              className="rounded-2xl border border-border bg-card p-5 text-center shadow-soft transition-all hover:-translate-y-1 hover:shadow-lift"
+              className="flex items-center gap-3 border-b border-border px-2 py-4 transition-colors hover:text-primary sm:px-4"
             >
-              <Leaf size={20} className="mx-auto text-primary" />
-              <span className="mt-2 block text-sm font-medium">{r.title}</span>
+              <RequirementIcon name={r.icon} />
+              <span className="text-sm font-medium">{r.title}</span>
             </AppLink>
           ))}
         </div>
@@ -200,10 +223,10 @@ function Home() {
         <div className="absolute inset-0 bg-gradient-to-r from-foreground/80 to-foreground/20" />
         <div className="absolute inset-0 mx-auto flex max-w-7xl flex-col justify-center px-6 lg:px-8">
           <h2 className="max-w-lg font-display text-3xl text-background sm:text-4xl">
-            Monsoon Planting Season Is Here
+            A Little Extra for Your Next Planting
           </h2>
           <p className="mt-3 max-w-md text-sm text-background/85">
-            Up to 40% off on flowering plants, seeds and grow kits.
+            Buy two eligible sale plants and get 50% off the third. The lowest priced eligible plant gets the discount.
           </p>
           <AppLink
             to="/category/offers"
@@ -251,31 +274,42 @@ function Home() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <SectionHeading
             title="What Our Customers Say"
-            subtitle="Verified reviews from across India"
+            subtitle="A few experiences shared by gardeners"
             align="center"
           />
-          <div className="no-scrollbar flex gap-4 overflow-x-auto pb-2">
-            {testimonials.map((t) => (
-              <figure
-                key={t.name}
-                className="w-[85%] shrink-0 rounded-2xl bg-card p-5 shadow-soft sm:w-80"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="grid h-11 w-11 place-items-center rounded-full bg-primary text-primary-foreground">
-                    {t.name.charAt(0)}
-                  </span>
-                  <div>
-                    <figcaption className="text-sm font-semibold">{t.name}</figcaption>
-                    <p className="text-xs text-muted-foreground">
-                      {t.city} · <span className="text-primary">Verified buyer</span>
-                    </p>
-                  </div>
-                </div>
-                <Stars rating={t.rating} />
-                <blockquote className="mt-2 text-sm text-muted-foreground">{t.text}</blockquote>
-              </figure>
-            ))}
-          </div>
+          <Carousel
+            opts={{ loop: true }}
+            setApi={setReviewsCarouselApi}
+            onMouseEnter={() => setReviewsPaused(true)}
+            onMouseLeave={() => setReviewsPaused(false)}
+            onFocusCapture={() => setReviewsPaused(true)}
+            onBlurCapture={() => setReviewsPaused(false)}
+            className="px-1 pt-2 sm:px-10"
+          >
+            <CarouselContent>
+              {testimonials.map((t) => (
+                <CarouselItem key={t.name} className="md:basis-1/2 lg:basis-1/3">
+                  <figure className="h-full rounded-2xl bg-card p-5 shadow-soft sm:p-6">
+                    <div className="flex items-center gap-3">
+                      <span className="grid h-11 w-11 place-items-center rounded-full bg-primary text-primary-foreground">
+                        {t.name.charAt(0)}
+                      </span>
+                      <div>
+                        <figcaption className="text-sm font-semibold">{t.name}</figcaption>
+                        <p className="text-xs text-muted-foreground">{t.city}</p>
+                      </div>
+                    </div>
+                    <Stars rating={t.rating} />
+                    <blockquote className="mt-2 text-sm leading-6 text-muted-foreground">
+                      {t.text}
+                    </blockquote>
+                  </figure>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="left-0 top-1/2 h-9 w-9 -translate-y-1/2 border-border bg-card text-foreground hover:bg-secondary" />
+            <CarouselNext className="right-0 top-1/2 h-9 w-9 -translate-y-1/2 border-border bg-card text-foreground hover:bg-secondary" />
+          </Carousel>
         </div>
       </section>
 
@@ -311,37 +345,49 @@ function Home() {
       </section>
 
       <section className="bg-leaf-deep py-14 text-primary-foreground">
-        <div className="mx-auto max-w-2xl px-4 text-center">
-          <h2 className="font-display text-3xl">Grow with Us</h2>
-          <p className="mt-2 text-sm text-primary-foreground/80">
-            Get plant care tips, new arrivals and exclusive offers.
-          </p>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              (e.target as HTMLFormElement).reset();
-            }}
-            className="mx-auto mt-6 flex max-w-md flex-col gap-3 sm:flex-row"
+        <div className="mx-auto flex max-w-7xl flex-col gap-5 px-4 sm:px-6 md:flex-row md:items-end md:justify-between lg:px-8">
+          <div className="max-w-xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+              From the garden journal
+            </p>
+            <h2 className="mt-3 font-display text-3xl sm:text-4xl">
+              Small questions are part of growing.
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-primary-foreground/80">
+              Read our practical notes on choosing plants, caring for them and making the most of
+              your space.
+            </p>
+          </div>
+          <AppLink
+            to="/blogs"
+            className="w-fit border-b border-accent pb-1 text-sm font-medium text-accent transition-colors hover:text-primary-foreground"
           >
-            <label htmlFor="news" className="sr-only">
-              Email address
-            </label>
-            <input
-              id="news"
-              type="email"
-              required
-              placeholder="Your email address"
-              className="h-12 flex-1 rounded-full px-5 text-sm text-foreground"
-            />
-            <button
-              type="submit"
-              className="h-12 rounded-full bg-accent px-6 text-sm font-semibold text-accent-foreground"
-            >
-              Subscribe
-            </button>
-          </form>
+            Browse the garden journal <span aria-hidden="true">→</span>
+          </AppLink>
         </div>
       </section>
     </>
   );
+}
+
+function RequirementIcon({ name }: { name: string }) {
+  const iconClass = "shrink-0 text-primary";
+  switch (name) {
+    case "Wind":
+      return <Wind size={19} className={iconClass} />;
+    case "PawPrint":
+      return <PawPrint size={19} className={iconClass} />;
+    case "Compass":
+      return <Compass size={19} className={iconClass} />;
+    case "Building2":
+      return <Building2 size={19} className={iconClass} />;
+    case "Home":
+      return <HomeIcon size={19} className={iconClass} />;
+    case "Sun":
+      return <Sun size={19} className={iconClass} />;
+    case "Moon":
+      return <Moon size={19} className={iconClass} />;
+    default:
+      return <Sprout size={19} className={iconClass} />;
+  }
 }
