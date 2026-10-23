@@ -120,9 +120,26 @@ const insertCategory = db.prepare(
 );
 const categoryId = db.prepare("SELECT id FROM product_categories WHERE slug = ?");
 const insertProduct = db.prepare(`
-  INSERT OR IGNORE INTO products(source_id,slug,sku,name,category_id,description,image,retail_price,wholesale_price,minimum_quantity,stock,active,featured)
+  INSERT INTO products(source_id,slug,sku,name,category_id,description,image,retail_price,wholesale_price,minimum_quantity,stock,active,featured)
   VALUES (@source_id,@slug,@sku,@name,@category_id,@description,@image,@retail_price,@wholesale_price,@minimum_quantity,@stock,1,@featured)
+  ON CONFLICT(source_id) DO UPDATE SET
+    slug=excluded.slug,
+    sku=excluded.sku,
+    name=excluded.name,
+    category_id=excluded.category_id,
+    description=excluded.description,
+    image=excluded.image,
+    retail_price=excluded.retail_price,
+    wholesale_price=excluded.wholesale_price,
+    minimum_quantity=excluded.minimum_quantity,
+    stock=excluded.stock,
+    featured=excluded.featured
 `);
+const seededProductId = db.prepare("SELECT id FROM products WHERE source_id = ?");
+const productImageCount = db.prepare("SELECT count(*) count FROM product_images WHERE product_id = ?");
+const insertSeededImage = db.prepare(
+  "INSERT INTO product_images(product_id,path,sort_order) VALUES (?,?,?)",
+);
 
 db.transaction(() => {
   for (const product of retailProducts) {
@@ -142,6 +159,13 @@ db.transaction(() => {
       stock: product.inStock ? 500 : 0,
       featured: product.groups.includes("bestsellers") ? 1 : 0,
     });
+    const seededProduct = seededProductId.get(product.id) as { id: number };
+    const imageCount = productImageCount.get(seededProduct.id) as { count: number };
+    if (imageCount.count === 0) {
+      product.gallery.forEach((image, index) =>
+        insertSeededImage.run(seededProduct.id, image, index),
+      );
+    }
   }
 })();
 

@@ -15,7 +15,6 @@ const inputClass = "mt-1 h-11 w-full rounded-md border border-border bg-backgrou
 
 function ResetPasswordPage() {
   const { token } = Route.useSearch();
-  const [developmentToken, setDevelopmentToken] = useState("");
   const [busy, setBusy] = useState(false);
   const navigate = useNavigate();
 
@@ -24,11 +23,14 @@ function ResetPasswordPage() {
     const form = new FormData(event.currentTarget);
     try {
       setBusy(true);
-      const result = await requestPasswordReset({
+      await requestPasswordReset({
         data: { identifier: String(form.get("identifier")) },
       });
-      setDevelopmentToken(result.developmentToken ?? "");
-      toast.success("If the account exists, a secure reset link has been prepared.");
+      toast.success(
+        "If the account exists and reset email delivery is configured, instructions will be sent. Contact support if no email arrives.",
+      );
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to request a reset link.");
     } finally {
       setBusy(false);
     }
@@ -47,7 +49,7 @@ function ResetPasswordPage() {
         },
       });
       toast.success("Password changed. Please sign in.");
-      await navigate({ to: "/wholesale/login" });
+      await navigate({ to: "/wholesale/login", search: {} });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Password reset failed.");
     } finally {
@@ -104,14 +106,6 @@ function ResetPasswordPage() {
             >
               Request secure link
             </button>
-            {developmentToken ? (
-              <a
-                href={`/wholesale/reset-password?token=${developmentToken}`}
-                className="mt-4 block text-center text-sm text-primary underline"
-              >
-                Open local development reset link
-              </a>
-            ) : null}
           </form>
         )}
       </div>

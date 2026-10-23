@@ -32,6 +32,10 @@ function CategoryPage() {
   const { slug } = Route.useParams();
   const cat = getCategory(slug);
   if (!cat) return null;
+  const items = products.filter(cat.match).sort((a, b) => {
+    if (slug !== "indoor-plants") return 0;
+    return Number(b.isClientProduct) - Number(a.isClientProduct);
+  });
   return (
     <>
       {slug === "offers" ? (
@@ -45,7 +49,7 @@ function CategoryPage() {
       <ProductListing
         title={cat.title}
         blurb={cat.blurb}
-        items={products.filter(cat.match)}
+        items={items}
         bannerImage={images.bannerSeasonal}
         crumbTrail={[{ label: "Shop", to: "/category/all" }, { label: cat.title }]}
       />

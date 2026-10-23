@@ -14,8 +14,8 @@ type StoreValue = {
   wishlist: string[];
   recent: string[];
   addToCart: (slug: string, qty?: number, size?: string, pot?: string) => void;
-  removeFromCart: (slug: string) => void;
-  setQty: (slug: string, qty: number) => void;
+  removeFromCart: (line: CartLine) => void;
+  setQty: (line: CartLine, qty: number) => void;
   clearCart: () => void;
   toggleWishlist: (slug: string) => void;
   inWishlist: (slug: string) => boolean;
@@ -96,13 +96,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         });
         toast.success(`${product.name} added to cart`);
       },
-      removeFromCart: (slug) => {
-        setCart((prev) => prev.filter((l) => l.slug !== slug));
+      removeFromCart: (line) => {
+        setCart((prev) =>
+          prev.filter((l) => !(l.slug === line.slug && l.size === line.size && l.pot === line.pot)),
+        );
         toast("Removed from cart");
       },
-      setQty: (slug, qty) =>
+      setQty: (line, qty) =>
         setCart((prev) =>
-          prev.map((l) => (l.slug === slug ? { ...l, qty: Math.max(1, Math.min(99, qty)) } : l)),
+          prev.map((l) =>
+            l.slug === line.slug && l.size === line.size && l.pot === line.pot
+              ? { ...l, qty: Math.max(1, Math.min(99, qty)) }
+              : l,
+          ),
         ),
       clearCart: () => setCart([]),
       toggleWishlist: (slug) => {

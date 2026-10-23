@@ -328,13 +328,13 @@ export function ProductListing({
             <div
               className={cn(
                 view === "grid"
-                  ? "grid grid-cols-2 gap-4 lg:grid-cols-3"
+                  ? "grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
                   : "flex flex-col gap-4",
               )}
             >
               {filtered.slice(0, visible).map((p) => (
-                <div key={p.id} className={view === "list" ? "max-w-2xl" : undefined}>
-                  <ProductCard product={p} />
+                <div key={p.id} className="min-w-0">
+                  <ProductCard product={p} view={view} />
                 </div>
               ))}
             </div>

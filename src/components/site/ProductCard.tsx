@@ -8,7 +8,13 @@ import { inr, useStore } from "@/lib/store";
 import type { Product } from "@/data/catalog";
 import { cn } from "@/lib/utils";
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({
+  product,
+  view = "grid",
+}: {
+  product: Product;
+  view?: "grid" | "list";
+}) {
   const { addToCart, toggleWishlist, inWishlist, priceOf } = useStore();
   const [qty, setQty] = useState(1);
   const [quick, setQuick] = useState(false);
@@ -18,16 +24,36 @@ export function ProductCard({ product }: { product: Product }) {
 
   return (
     <>
-      <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-lift">
-        <div className="relative overflow-hidden bg-secondary/40">
-          <Link to="/product/$slug" params={{ slug: product.slug }} aria-label={product.name}>
+      <article
+        className={cn(
+          "group h-full overflow-hidden rounded-2xl border border-border bg-card shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-lift",
+          view === "list"
+            ? "flex flex-col sm:grid sm:grid-cols-[240px_minmax(0,1fr)]"
+            : "flex flex-col",
+        )}
+      >
+        <div
+          className={cn(
+            "relative overflow-hidden bg-secondary/40",
+            view === "list" && "sm:min-h-[290px]",
+          )}
+        >
+          <Link
+            to="/product/$slug"
+            params={{ slug: product.slug }}
+            aria-label={product.name}
+            className={cn(view === "list" && "sm:block sm:h-full")}
+          >
             <img
               src={product.image}
               alt={`${product.name} — ${product.category}`}
               loading="lazy"
               width={800}
               height={800}
-              className="aspect-square w-full object-cover transition-opacity duration-500 group-hover:opacity-0"
+              className={cn(
+                "w-full object-cover transition-opacity duration-500 group-hover:opacity-0",
+                view === "list" ? "aspect-square sm:h-full sm:aspect-auto" : "aspect-square",
+              )}
             />
             <img
               src={product.hoverImage}
@@ -36,7 +62,10 @@ export function ProductCard({ product }: { product: Product }) {
               loading="lazy"
               width={800}
               height={800}
-              className="absolute inset-0 aspect-square w-full scale-105 object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+              className={cn(
+                "absolute inset-0 h-full w-full scale-105 object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100",
+                view === "grid" && "aspect-square",
+              )}
             />
           </Link>
 
@@ -79,7 +108,7 @@ export function ProductCard({ product }: { product: Product }) {
           ) : null}
         </div>
 
-        <div className="flex flex-1 flex-col gap-2 p-3 sm:p-4">
+        <div className={cn("flex flex-1 flex-col gap-2 p-3 sm:p-4", view === "list" && "sm:p-6")}>
           <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
             {product.category}
           </p>
@@ -94,9 +123,16 @@ export function ProductCard({ product }: { product: Product }) {
             <Stars rating={product.rating} size={13} />
             <span>({product.reviews})</span>
           </div>
-          <div className="mt-auto flex items-baseline gap-2">
-            <span className="text-lg font-semibold text-primary">{inr(price)}</span>
-            <span className="text-xs text-muted-foreground line-through">{inr(product.mrp)}</span>
+          <div className="mt-auto flex flex-wrap items-baseline gap-2">
+            <span className="text-2xl font-semibold leading-none text-primary">{inr(price)}</span>
+            {product.mrp > price ? (
+              <>
+                <span className="text-sm text-muted-foreground line-through">{inr(product.mrp)}</span>
+                <span className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-leaf-deep">
+                  {discount}% off
+                </span>
+              </>
+            ) : null}
           </div>
 
           <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-[auto_minmax(0,1fr)]">
@@ -153,11 +189,18 @@ export function ProductCard({ product }: { product: Product }) {
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Stars rating={product.rating} /> <span>({product.reviews} reviews)</span>
               </div>
-              <div className="flex items-baseline gap-2">
+              <div className="flex flex-wrap items-baseline gap-2">
                 <span className="text-2xl font-semibold text-primary">{inr(price)}</span>
-                <span className="text-sm text-muted-foreground line-through">
-                  {inr(product.mrp)}
-                </span>
+                {product.mrp > price ? (
+                  <>
+                    <span className="text-sm text-muted-foreground line-through">
+                      {inr(product.mrp)}
+                    </span>
+                    <span className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-leaf-deep">
+                      {discount}% off
+                    </span>
+                  </>
+                ) : null}
               </div>
               <p className="text-sm text-muted-foreground">{product.description}</p>
               <ul className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">

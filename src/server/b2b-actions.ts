@@ -153,6 +153,7 @@ const loginSchema = z.object({
 export const loginB2b = createServerFn({ method: "POST" })
   .validator(loginSchema)
   .handler(async ({ data }) => {
+    db.prepare("DELETE FROM login_attempts WHERE attempted_at < datetime('now','-1 day')").run();
     const recent = db
       .prepare(
         "SELECT count(*) count FROM login_attempts WHERE identifier=? AND attempted_at > datetime('now','-15 minutes')",
@@ -258,7 +259,7 @@ export const requestPasswordReset = createServerFn({ method: "POST" })
     db.prepare(
       "INSERT INTO notifications(type,message,entity_type,entity_id) VALUES ('password_reset',?,'customer',?)",
     ).run(`Password reset requested by ${customer.email}`, customer.id);
-    return { ok: true, developmentToken: process.env["NODE_ENV"] === "production" ? null : token };
+    return { ok: true };
   });
 
 export const resetB2bPassword = createServerFn({ method: "POST" })
@@ -566,7 +567,10 @@ export const getAdminData = createServerFn({ method: "GET" }).handler(async () =
   const notifications = db.prepare("SELECT * FROM notifications ORDER BY id DESC LIMIT 50").all();
   const products = db
     .prepare(
-      "SELECT p.*,c.name category FROM products p LEFT JOIN product_categories c ON c.id=p.category_id ORDER BY p.id DESC",
+      `SELECT p.*,c.name category,
+      COALESCE((SELECT pi.path FROM product_images pi WHERE pi.product_id=p.id ORDER BY pi.sort_order LIMIT 1),p.image) display_image,
+      (SELECT count(*) FROM product_images pi WHERE pi.product_id=p.id) image_count
+      FROM products p LEFT JOIN product_categories c ON c.id=p.category_id ORDER BY p.id DESC`,
     )
     .all();
   const documents = db

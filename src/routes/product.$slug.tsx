@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
 import { Heart, Share2, ShieldCheck, ShoppingCart, Truck } from "lucide-react";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
 import { AppLink } from "@/components/site/AppLink";
@@ -43,11 +43,12 @@ export const Route = createFileRoute("/product/$slug")({
 
 function ProductPage() {
   const { slug } = Route.useParams();
+  const navigate = useNavigate();
   const product = getProduct(slug);
   const { addToCart, toggleWishlist, inWishlist, priceOf, markViewed, recent } = useStore();
   const [qty, setQty] = useState(1);
-  const size = "3 inch";
-  const [pot, setPot] = useState("Nursery Pot");
+  const size = product?.potSize ?? "Medium";
+  const [pot, setPot] = useState(product?.potType ?? "Nursery Pot");
   const [active, setActive] = useState(0);
   const [pin, setPin] = useState("");
   const [pinMsg, setPinMsg] = useState("");
@@ -58,7 +59,7 @@ function ProductPage() {
   }, [slug]);
 
   if (!product) return null;
-  const gallery = [product.image, product.hoverImage, product.image];
+  const gallery = product.gallery;
   const price = priceOf(product);
   const similar = products
     .filter((p) => p.categorySlug === product.categorySlug && p.slug !== product.slug)
@@ -116,15 +117,23 @@ function ProductPage() {
             </div>
             <div className="mt-4 flex items-baseline gap-3">
               <span className="text-3xl font-semibold text-primary">{inr(price)}</span>
-              <span className="text-sm text-muted-foreground line-through">{inr(product.mrp)}</span>
-              <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-semibold text-leaf-deep">
-                {Math.round(((product.mrp - product.price) / product.mrp) * 100)}% off
-              </span>
+              {product.mrp > price ? (
+                <>
+                  <span className="text-sm text-muted-foreground line-through">
+                    {inr(product.mrp)}
+                  </span>
+                  <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-semibold text-leaf-deep">
+                    {Math.round(((product.mrp - product.price) / product.mrp) * 100)}% off
+                  </span>
+                </>
+              ) : null}
             </div>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Wholesale price {inr(product.wholesalePrice)} · visible to approved B2B accounts (MOQ{" "}
-              {product.moq})
-            </p>
+            {product.wholesale ? (
+              <p className="mt-2 text-sm text-muted-foreground">
+                Wholesale price {inr(product.wholesalePrice)} · visible to approved B2B accounts (MOQ{" "}
+                {product.moq})
+              </p>
+            ) : null}
             <p
               className={`mt-2 text-sm font-medium ${product.inStock ? "text-primary" : "text-destructive"}`}
             >
@@ -133,7 +142,7 @@ function ProductPage() {
 
             <div className="mt-6 grid gap-4">
               <p className="text-sm">
-                Available sizes: <span className="font-medium">3 inch / 4 inch / 5 inch</span>
+                Available size: <span className="font-medium">{product.potSize}</span>
               </p>
               <label className="text-sm">
                 Pot option
@@ -143,13 +152,16 @@ function ProductPage() {
                   className="mt-1 h-11 w-full rounded-xl border border-border bg-card px-3 text-sm"
                 >
                   {[
+                    product.potType,
                     "Nursery Pot",
                     "Terracotta Pot",
                     "Ceramic Planter",
                     "Self Watering Planter",
-                  ].map((s) => (
+                  ]
+                    .filter((value, index, values) => values.indexOf(value) === index)
+                    .map((s) => (
                     <option key={s}>{s}</option>
-                  ))}
+                    ))}
                 </select>
               </label>
             </div>
@@ -177,7 +189,10 @@ function ProductPage() {
               <button
                 type="button"
                 disabled={!product.inStock}
-                onClick={() => addToCart(product.slug, qty, size, pot)}
+                onClick={() => {
+                  addToCart(product.slug, qty, size, pot);
+                  void navigate({ to: "/checkout" });
+                }}
                 className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-leaf-deep disabled:opacity-50"
               >
                 <ShoppingCart size={16} /> Add to Cart
@@ -203,7 +218,14 @@ function ProductPage() {
               </button>
               <button
                 type="button"
-                onClick={() => toast.success("Product link copied to clipboard")}
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(window.location.href);
+                    toast.success("Product link copied to clipboard");
+                  } catch {
+                    toast.error("Unable to copy the product link on this device.");
+                  }
+                }}
                 aria-label="Share product"
                 className="grid h-11 w-11 place-items-center rounded-full border border-border hover:bg-secondary"
               >

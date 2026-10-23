@@ -828,7 +828,21 @@ function Products({ rows, refresh }: { rows: Row[]; refresh: () => Promise<void>
             {shown.map((row) => (
               <tr key={String(row.id)} className="border-b">
                 <td className="p-3">{String(row.sku)}</td>
-                <td className="p-3 font-medium">{String(row.name)}</td>
+                <td className="p-3 font-medium">
+                  <div className="flex min-w-[220px] items-center gap-3">
+                    <img
+                      src={String(row.display_image || row.image || "")}
+                      alt=""
+                      className="h-12 w-12 shrink-0 rounded-md border bg-secondary/40 object-contain"
+                    />
+                    <div>
+                      <p>{String(row.name)}</p>
+                      <p className="mt-0.5 text-xs font-normal text-muted-foreground">
+                        {Number(row.image_count || 0)} {Number(row.image_count || 0) === 1 ? "image" : "images"}
+                      </p>
+                    </div>
+                  </div>
+                </td>
                 <td className="p-3">{String(row.category)}</td>
                 <td className="p-3">{money(row.retail_price)}</td>
                 <td className="p-3">{money(row.wholesale_price)}</td>
