@@ -1,6 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { Building2, Compass, Home as HomeIcon, Moon, PawPrint, Sprout, Sun, Wind } from "lucide-react";
+import {
+  Building2,
+  Compass,
+  Home as HomeIcon,
+  Moon,
+  PawPrint,
+  Sprout,
+  Sun,
+  Wind,
+} from "lucide-react";
 import { HeroSlider } from "@/components/site/HeroSlider";
 import { CategoryStrip } from "@/components/site/CategoryStrip";
 import { ProductCarousel } from "@/components/site/ProductCarousel";
@@ -54,7 +63,11 @@ function Home() {
   const setReviewsCarouselApi = useCallback((api: CarouselApi) => setReviewsApi(api), []);
 
   useEffect(() => {
-    if (!reviewsApi || reviewsPaused || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (
+      !reviewsApi ||
+      reviewsPaused ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
       return;
     }
     const timer = window.setInterval(() => reviewsApi.scrollNext(), 5000);
@@ -64,6 +77,63 @@ function Home() {
   return (
     <>
       <HeroSlider />
+
+      <section className="mx-auto max-w-7xl px-4 pt-12 sm:px-6 lg:px-8">
+        <SectionHeading
+          title="Our Products"
+          subtitle="Explore plants and gardening essentials from our nursery"
+          align="center"
+        />
+      </section>
+
+      <ProductCarousel
+        title="Bestselling Plants"
+        subtitle="Popular picks from our plant range"
+        viewAllTo="/category/bestsellers"
+        items={byGroup("bestsellers").slice(0, 4)}
+      />
+      <ProductCarousel
+        title="New Arrivals"
+        subtitle="Recently added to the nursery"
+        viewAllTo="/category/new-arrivals"
+        items={byGroup("new").slice(0, 4)}
+      />
+      <ProductCarousel
+        title="Indoor Plants"
+        subtitle="Plants chosen for indoor spaces"
+        viewAllTo="/category/indoor-plants"
+        items={byCategory("indoor-plants").slice(0, 4)}
+      />
+      <ProductCarousel
+        title="Flowering Plants"
+        subtitle="Season-long colour for your garden"
+        viewAllTo="/category/flowering-plants"
+        items={byCategory("flowering-plants").slice(0, 4)}
+      />
+      <ProductCarousel
+        title="Seasonal Seeds"
+        subtitle="Sow now, harvest soon"
+        viewAllTo="/category/seasonal-seeds"
+        items={byGroup("seasonal").slice(0, 4)}
+      />
+      <ProductCarousel
+        title="Gardening Essentials"
+        subtitle="Tools, soil and plant care"
+        viewAllTo="/category/plant-care"
+        items={byGroup("essentials").slice(0, 4)}
+      />
+      <ProductCarousel
+        title="Ready-to-Grow Kits"
+        subtitle="Everything in one box"
+        viewAllTo="/category/gardening-kits"
+        items={byCategory("gardening-kits").slice(0, 4)}
+      />
+      <ProductCarousel
+        title="Special Offers"
+        subtitle="Buy two eligible sale plants and get 50% off the third"
+        viewAllTo="/category/offers"
+        items={products.filter((p) => (p.mrp - p.price) / p.mrp >= 0.3).slice(0, 4)}
+      />
 
       <section className="mx-auto grid max-w-7xl gap-5 px-4 py-10 sm:px-6 md:grid-cols-2 lg:px-8">
         {[
@@ -144,55 +214,6 @@ function Home() {
         </div>
       </section>
 
-      <ProductCarousel
-        title="Bestselling Plants"
-        subtitle="Popular picks from our plant range"
-        viewAllTo="/category/bestsellers"
-        items={byGroup("bestsellers").slice(0, 4)}
-      />
-      <ProductCarousel
-        title="New Arrivals"
-        subtitle="Recently added to the nursery"
-        viewAllTo="/category/new-arrivals"
-        items={byGroup("new").slice(0, 4)}
-      />
-      <ProductCarousel
-        title="Indoor Plants"
-        subtitle="Plants chosen for indoor spaces"
-        viewAllTo="/category/indoor-plants"
-        items={byCategory("indoor-plants").slice(0, 4)}
-      />
-      <ProductCarousel
-        title="Flowering Plants"
-        subtitle="Season-long colour for your garden"
-        viewAllTo="/category/flowering-plants"
-        items={byCategory("flowering-plants").slice(0, 4)}
-      />
-      <ProductCarousel
-        title="Seasonal Seeds"
-        subtitle="Sow now, harvest soon"
-        viewAllTo="/category/seasonal-seeds"
-        items={byGroup("seasonal").slice(0, 4)}
-      />
-      <ProductCarousel
-        title="Gardening Essentials"
-        subtitle="Tools, soil and plant care"
-        viewAllTo="/category/plant-care"
-        items={byGroup("essentials").slice(0, 4)}
-      />
-      <ProductCarousel
-        title="Ready-to-Grow Kits"
-        subtitle="Everything in one box"
-        viewAllTo="/category/gardening-kits"
-        items={byCategory("gardening-kits").slice(0, 4)}
-      />
-      <ProductCarousel
-        title="Special Offers"
-        subtitle="Buy two eligible sale plants and get 50% off the third"
-        viewAllTo="/category/offers"
-        items={products.filter((p) => (p.mrp - p.price) / p.mrp >= 0.3).slice(0, 4)}
-      />
-
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <SectionHeading
           title="Shop by Plant Requirement"
@@ -226,7 +247,8 @@ function Home() {
             A Little Extra for Your Next Planting
           </h2>
           <p className="mt-3 max-w-md text-sm text-background/85">
-            Buy two eligible sale plants and get 50% off the third. The lowest priced eligible plant gets the discount.
+            Buy two eligible sale plants and get 50% off the third. The lowest priced eligible plant
+            gets the discount.
           </p>
           <AppLink
             to="/category/offers"

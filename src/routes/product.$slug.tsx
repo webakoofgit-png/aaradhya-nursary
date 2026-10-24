@@ -47,20 +47,27 @@ function ProductPage() {
   const product = getProduct(slug);
   const { addToCart, toggleWishlist, inWishlist, priceOf, markViewed, recent } = useStore();
   const [qty, setQty] = useState(1);
-  const size = product?.potSize ?? "Medium";
+  const [size, setSize] = useState(product?.potSize ?? "6 inch");
   const [pot, setPot] = useState(product?.potType ?? "Nursery Pot");
   const [active, setActive] = useState(0);
   const [pin, setPin] = useState("");
   const [pinMsg, setPinMsg] = useState("");
 
   useEffect(() => {
-    if (product) markViewed(product.slug);
+    if (product) {
+      markViewed(product.slug);
+      setSize(product.potSize);
+      setPot(product.potType);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
   if (!product) return null;
   const gallery = product.gallery;
   const price = priceOf(product);
+  const isPlant = ["indoor-plants", "outdoor-plants", "flowering-plants"].includes(
+    product.categorySlug,
+  );
   const similar = products
     .filter((p) => p.categorySlug === product.categorySlug && p.slug !== product.slug)
     .slice(0, 8);
@@ -130,8 +137,8 @@ function ProductPage() {
             </div>
             {product.wholesale ? (
               <p className="mt-2 text-sm text-muted-foreground">
-                Wholesale price {inr(product.wholesalePrice)} · visible to approved B2B accounts (MOQ{" "}
-                {product.moq})
+                Wholesale price {inr(product.wholesalePrice)} · visible to approved B2B accounts
+                (MOQ {product.moq})
               </p>
             ) : null}
             <p
@@ -141,9 +148,28 @@ function ProductPage() {
             </p>
 
             <div className="mt-6 grid gap-4">
-              <p className="text-sm">
-                Available size: <span className="font-medium">{product.potSize}</span>
-              </p>
+              {isPlant ? (
+                <fieldset>
+                  <legend className="text-sm font-medium">Pot size</legend>
+                  <div className="mt-2 flex gap-2">
+                    {["5 inch", "6 inch"].map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => setSize(option)}
+                        aria-pressed={size === option}
+                        className={`min-w-24 rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors ${
+                          size === option
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-card hover:border-primary"
+                        }`}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                </fieldset>
+              ) : null}
               <label className="text-sm">
                 Pot option
                 <select
@@ -160,7 +186,7 @@ function ProductPage() {
                   ]
                     .filter((value, index, values) => values.indexOf(value) === index)
                     .map((s) => (
-                    <option key={s}>{s}</option>
+                      <option key={s}>{s}</option>
                     ))}
                 </select>
               </label>
@@ -302,7 +328,7 @@ function ProductPage() {
                   <ul className="grid gap-1 sm:grid-cols-2">
                     <li>Botanical name: {product.botanical}</li>
                     <li>Plant height: {product.size}</li>
-                    <li>Pot size: {product.potSize}</li>
+                    <li>Pot size: {size}</li>
                     <li>Sunlight: {product.sunlight}</li>
                     <li>Watering: {product.water}</li>
                     <li>Difficulty: {product.difficulty}</li>

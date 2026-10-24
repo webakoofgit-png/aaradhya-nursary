@@ -13,7 +13,7 @@ import pTools from "@/assets/p-tools.jpg";
 import pFertilizer from "@/assets/p-fertilizer.jpg";
 import pKit from "@/assets/p-kit.jpg";
 import pSnake from "@/assets/p-snake.jpg";
-import { indoorImages } from "@/assets/indoor";
+import { indoorImages } from "@/assets/indoor-images";
 
 export const images = {
   heroIndoor,
@@ -105,16 +105,17 @@ const catSlug: Record<string, string> = {
 };
 
 function make(seed: Seed, i: number): Product {
-  const name = seed.name;
+  const sourceName = seed.name;
+  const name = sourceName.replace(/\s*-\s*[56]\s*inch(?:\s+(?:brown|black|white))?\s+pot$/i, "");
   const category = seed.category;
   const hoverImage = seed.hoverImage ?? seed.gallery?.[1] ?? seed.image;
-  const potColor = name.match(/\b(Brown|Black|White) Pot\b/i)?.[1];
+  const potColor = sourceName.match(/\b(Brown|Black|White) Pot\b/i)?.[1];
   // Preserve every selling price. Products without an existing markdown receive
   // a compare-at MRP so the storefront can consistently show the discount row.
   const mrp = seed.mrp > seed.price ? seed.mrp : Math.round(seed.price / 0.62);
   return {
     id: `VR-${1000 + i}`,
-    slug: slugify(name),
+    slug: slugify(sourceName),
     name,
     category,
     categorySlug: catSlug[category] ?? slugify(category),
@@ -159,8 +160,8 @@ const seeds: Seed[] = [
     category: "Indoor Plants",
     price: 249,
     mrp: 399,
-    image: pIndoor,
-    hoverImage: pSnake,
+    image: indoorImages.moneyPlant[0],
+    gallery: [...indoorImages.moneyPlant],
     groups: ["bestsellers", "air-purifying", "low-maintenance", "office", "low-light"],
     botanical: "Epipremnum aureum",
     rating: 4.8,

@@ -17,10 +17,14 @@ export function ProductCard({
 }) {
   const { addToCart, toggleWishlist, inWishlist, priceOf } = useStore();
   const [qty, setQty] = useState(1);
+  const [size, setSize] = useState(product.potSize);
   const [quick, setQuick] = useState(false);
   const price = priceOf(product);
   const discount = Math.round(((product.mrp - product.price) / product.mrp) * 100);
   const wished = inWishlist(product.slug);
+  const isPlant = ["indoor-plants", "outdoor-plants", "flowering-plants"].includes(
+    product.categorySlug,
+  );
 
   return (
     <>
@@ -127,7 +131,9 @@ export function ProductCard({
             <span className="text-2xl font-semibold leading-none text-primary">{inr(price)}</span>
             {product.mrp > price ? (
               <>
-                <span className="text-sm text-muted-foreground line-through">{inr(product.mrp)}</span>
+                <span className="text-sm text-muted-foreground line-through">
+                  {inr(product.mrp)}
+                </span>
                 <span className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-leaf-deep">
                   {discount}% off
                 </span>
@@ -158,7 +164,7 @@ export function ProductCard({
             <button
               type="button"
               disabled={!product.inStock}
-              onClick={() => addToCart(product.slug, qty)}
+              onClick={() => addToCart(product.slug, qty, size, product.potType)}
               className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full bg-primary px-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-leaf-deep disabled:cursor-not-allowed disabled:opacity-50"
             >
               <ShoppingCart size={15} /> Add
@@ -203,6 +209,29 @@ export function ProductCard({
                 ) : null}
               </div>
               <p className="text-sm text-muted-foreground">{product.description}</p>
+              {isPlant ? (
+                <fieldset>
+                  <legend className="text-sm font-medium">Pot size</legend>
+                  <div className="mt-2 flex gap-2">
+                    {["5 inch", "6 inch"].map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => setSize(option)}
+                        aria-pressed={size === option}
+                        className={cn(
+                          "rounded-lg border px-4 py-2 text-sm font-medium",
+                          size === option
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border hover:border-primary",
+                        )}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                </fieldset>
+              ) : null}
               <ul className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
                 <li>Sunlight: {product.sunlight}</li>
                 <li>Water: {product.water}</li>
@@ -214,7 +243,7 @@ export function ProductCard({
                   type="button"
                   disabled={!product.inStock}
                   onClick={() => {
-                    addToCart(product.slug, qty);
+                    addToCart(product.slug, qty, size, product.potType);
                     setQuick(false);
                   }}
                   className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:bg-leaf-deep disabled:opacity-50"
