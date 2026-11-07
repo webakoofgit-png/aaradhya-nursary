@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { LockKeyhole } from "lucide-react";
 import { toast } from "sonner";
@@ -7,6 +7,9 @@ import { PageHeader } from "@/components/site/PageHeader";
 import { loginB2b } from "@/server/b2b-actions";
 
 export const Route = createFileRoute("/wholesale/login")({
+  beforeLoad: () => {
+    throw redirect({ to: "/wholesale" });
+  },
   validateSearch: (search: Record<string, unknown>) => ({
     registered: search["registered"] === "1" ? "1" : undefined,
   }),

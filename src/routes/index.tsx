@@ -82,14 +82,6 @@ function Home() {
 
       <CategoryStrip />
 
-      <section className="mx-auto max-w-7xl px-4 pt-12 sm:px-6 lg:px-8">
-        <SectionHeading
-          title="Our Products"
-          subtitle="Explore plants and gardening essentials from our nursery"
-          align="center"
-        />
-      </section>
-
       <ProductCarousel
         title="Indoor Plants"
         subtitle="Plants chosen for indoor spaces"

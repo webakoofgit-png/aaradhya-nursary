@@ -139,7 +139,7 @@ function ProductPage() {
             </div>
             {product.wholesale ? (
               <p className="mt-2 text-sm text-muted-foreground">
-                Wholesale price {inr(product.wholesalePrice)} · visible to approved B2B accounts
+                Wholesale price guide {inr(product.wholesalePrice)} · confirm through WhatsApp enquiry
                 (MOQ {product.moq})
               </p>
             ) : null}

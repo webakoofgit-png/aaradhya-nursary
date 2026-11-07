@@ -22,7 +22,7 @@ const quick: { label: string; reply: string }[] = [
   {
     label: "Wholesale Enquiry",
     reply:
-      "Wholesale pricing unlocks after B2B account approval, usually within 24 to 48 hours. You can register on the Wholesale page or submit a bulk quotation request.",
+      "Open the Wholesale Enquiry page, fill in your requirement and continue on WhatsApp. Our team will reply with availability, bulk pricing and delivery details.",
   },
   {
     label: "Delivery Information",

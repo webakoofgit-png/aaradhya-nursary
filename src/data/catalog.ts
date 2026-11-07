@@ -4,7 +4,7 @@ import heroBalcony from "@/assets/hero-3.jpg";
 import heroSeasonal from "@/assets/hero-4.jpg";
 import bannerSeasonal from "@/assets/banner-seasonal.jpg";
 import corporateImg from "@/assets/corporate.jpg";
-import aboutImg from "@/assets/about-nursery.jpg";
+import aboutImg from "@/assets/about-nursery-v2.png";
 import pIndoor from "@/assets/p-indoor.jpg";
 import pFlowering from "@/assets/p-flowering.jpg";
 import pSeeds from "@/assets/p-seeds.jpg";
@@ -1667,7 +1667,7 @@ export const services = [
     icon: "Truck",
     short: "Bulk plants at business pricing with dedicated support.",
     detail:
-      "Approved B2B buyers unlock slab-based wholesale pricing, priority dispatch, GST invoicing and a dedicated account manager for recurring orders.",
+      "Send your requirement on WhatsApp to receive slab-based wholesale pricing, availability, GST invoicing and delivery support for recurring orders.",
   },
   {
     slug: "landscaping-plants",
@@ -1733,8 +1733,8 @@ export const faqs = [
     a: "Wholesale orders start at ₹15,000 per invoice, with a per-product minimum shown on each wholesale listing (typically 10 to 100 units).",
   },
   {
-    q: "How long does account approval take?",
-    a: "Most B2B accounts are verified within 24 to 48 working hours after we receive your GST and business documents.",
+    q: "How do I request a wholesale quotation?",
+    a: "Complete the short wholesale enquiry form and continue on WhatsApp. Our team will confirm availability, pricing and delivery details directly.",
   },
   {
     q: "Do you deliver across India?",
@@ -1746,7 +1746,7 @@ export const faqs = [
   },
   {
     q: "Can I get a GST invoice?",
-    a: "Every retail and wholesale order can be invoiced with your GSTIN. Add it at checkout or in your B2B profile.",
+    a: "Every retail and wholesale order can be invoiced with your GSTIN. Include it in your checkout details or WhatsApp wholesale enquiry.",
   },
   {
     q: "Do wholesale prices change with quantity?",
@@ -1758,7 +1758,7 @@ export const faqs = [
   },
   {
     q: "Which payment methods are accepted?",
-    a: "UPI and cash on delivery are available for retail orders. Approved B2B accounts can request credit terms.",
+    a: "UPI and cash on delivery are available for retail orders. Wholesale payment terms are confirmed with your quotation.",
   },
 ];
 
@@ -1802,7 +1802,7 @@ export const heroSlides = [
     image: heroWholesale,
     heading: "Wholesale Plants at Business Prices",
     sub: "Bulk plants and nursery supplies for dealers, landscapers and businesses.",
-    primary: { label: "Register for B2B", to: "/wholesale/register" },
+    primary: { label: "Wholesale Enquiry", to: "/wholesale" },
     secondary: { label: "View Wholesale Products", to: "/category/wholesale-products" },
   },
   {

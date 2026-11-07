@@ -120,7 +120,7 @@ export function Header() {
             to="/wholesale"
             className="hidden h-10 items-center justify-center rounded-full bg-accent px-4 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent/85 sm:inline-flex"
           >
-            B2B / Wholesale
+            Wholesale Enquiry
           </AppLink>
           <Link
             to="/account"
@@ -257,7 +257,7 @@ export function Header() {
                     to="/wholesale"
                     className="block rounded-full bg-accent px-3 py-2.5 text-center text-sm font-semibold text-accent-foreground"
                   >
-                    B2B / Wholesale
+                    Wholesale Enquiry
                   </AppLink>
                 </div>
 

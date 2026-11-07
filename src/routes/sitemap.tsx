@@ -17,9 +17,8 @@ const groups = [
   [
     "Wholesale",
     [
-      ["B2B Registration", "/wholesale/register"],
-      ["B2B Login", "/wholesale/login"],
-      ["Bulk Quotation", "/bulk-quote"],
+      ["Wholesale Enquiry", "/wholesale"],
+      ["Wholesale Products", "/category/wholesale-products"],
     ],
   ],
   [

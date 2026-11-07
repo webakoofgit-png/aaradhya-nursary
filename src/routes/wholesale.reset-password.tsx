@@ -1,10 +1,13 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/site/PageHeader";
 import { requestPasswordReset, resetB2bPassword } from "@/server/b2b-actions";
 
 export const Route = createFileRoute("/wholesale/reset-password")({
+  beforeLoad: () => {
+    throw redirect({ to: "/wholesale" });
+  },
   validateSearch: (search: Record<string, unknown>) => ({
     token: typeof search["token"] === "string" ? search["token"] : "",
   }),

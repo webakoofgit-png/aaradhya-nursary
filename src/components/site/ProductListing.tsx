@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import { LayoutGrid, List, SlidersHorizontal, X } from "lucide-react";
 import { Breadcrumbs } from "./Breadcrumbs";
 import { ProductCard } from "./ProductCard";
-import { Stars } from "./Stars";
 import { AppLink } from "./AppLink";
 import { inr, useStore } from "@/lib/store";
 import { products, type Product } from "@/data/catalog";
@@ -16,25 +15,17 @@ type Filters = {
   water: string[];
   size: string[];
   potSize: string[];
-  inStockOnly: boolean;
-  minRating: number;
-  channel: string[];
-  discounted: boolean;
   newOnly: boolean;
 };
 
 const empty: Filters = {
   categories: [],
-  maxPrice: 5000,
+  maxPrice: 50000,
   placement: [],
   sunlight: [],
   water: [],
   size: [],
   potSize: [],
-  inStockOnly: false,
-  minRating: 0,
-  channel: [],
-  discounted: false,
   newOnly: false,
 };
 
@@ -103,10 +94,6 @@ export function ProductListing({
       if (filters.water.length && !filters.water.includes(p.water)) return false;
       if (filters.size.length && !filters.size.includes(p.size)) return false;
       if (filters.potSize.length && !filters.potSize.includes(p.potSize)) return false;
-      if (filters.inStockOnly && !p.inStock) return false;
-      if (p.rating < filters.minRating) return false;
-      if (filters.channel.includes("Wholesale") && !p.wholesale) return false;
-      if (filters.discounted && !p.offerId && (p.mrp - p.price) / p.mrp < 0.3) return false;
       if (filters.newOnly && !p.groups.includes("new")) return false;
       return true;
     });
@@ -152,7 +139,7 @@ export function ProductListing({
         <input
           type="range"
           min={50}
-          max={5000}
+          max={50000}
           step={50}
           value={filters.maxPrice}
           aria-label="Maximum price"
@@ -222,48 +209,6 @@ export function ProductListing({
       </fieldset>
 
       <fieldset>
-        <legend className="mb-1 text-sm font-semibold">Buying Channel</legend>
-        {["Retail", "Wholesale"].map((v) => (
-          <Check
-            key={v}
-            label={v}
-            checked={filters.channel.includes(v)}
-            onChange={() => toggle("channel", v)}
-          />
-        ))}
-      </fieldset>
-
-      <fieldset>
-        <legend className="mb-1 text-sm font-semibold">Rating</legend>
-        {[4.5, 4, 3.5].map((r) => (
-          <label
-            key={r}
-            className="flex cursor-pointer items-center gap-2 py-1 text-sm text-muted-foreground"
-          >
-            <input
-              type="radio"
-              name="rating"
-              checked={filters.minRating === r}
-              onChange={() => setFilters((f) => ({ ...f, minRating: r }))}
-              className="h-4 w-4 accent-[var(--primary)]"
-            />
-            <Stars rating={r} size={12} /> &amp; up
-          </label>
-        ))}
-      </fieldset>
-
-      <fieldset className="space-y-1">
-        <legend className="mb-1 text-sm font-semibold">More</legend>
-        <Check
-          label="In stock only"
-          checked={filters.inStockOnly}
-          onChange={(v) => setFilters((f) => ({ ...f, inStockOnly: v }))}
-        />
-        <Check
-          label="30% or more off"
-          checked={filters.discounted}
-          onChange={(v) => setFilters((f) => ({ ...f, discounted: v }))}
-        />
         <Check
           label="New arrivals"
           checked={filters.newOnly}

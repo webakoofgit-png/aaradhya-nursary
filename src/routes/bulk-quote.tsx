@@ -8,30 +8,22 @@ function BulkQuotePage() {
   return (
     <div>
       <PageHeader
-        title="Bulk Quotation"
-        subtitle="Create a verified wholesale quotation with live product pricing."
+        title="Wholesale Enquiry"
+        subtitle="Send your bulk requirement directly to our nursery team on WhatsApp."
         trail={[{ label: "Bulk Quotation" }]}
       />
       <section className="mx-auto max-w-3xl px-4 py-12 text-center sm:px-6">
-        <h2 className="font-display text-2xl text-leaf-deep">Start your B2B quotation</h2>
+        <h2 className="font-display text-2xl text-leaf-deep">No account or login required</h2>
         <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
-          Register your business first. Once approved, sign in to select products, change
-          quantities, preview totals and download your PDF quotation.
+          Tell us which products, quantities and delivery location you need. Your enquiry will
+          open in WhatsApp so our team can respond with availability and a custom quotation.
         </p>
-        <div className="mt-7 flex flex-wrap justify-center gap-3">
-          <AppLink
-            to="/wholesale/register"
-            className="rounded-md bg-primary px-5 py-3 text-sm font-medium text-primary-foreground"
-          >
-            Register Now
-          </AppLink>
-          <AppLink
-            to="/wholesale/login"
-            className="rounded-md border border-border bg-card px-5 py-3 text-sm font-medium"
-          >
-            B2B Login
-          </AppLink>
-        </div>
+        <AppLink
+          to="/wholesale"
+          className="mt-7 inline-flex rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground"
+        >
+          Open Wholesale Enquiry Form
+        </AppLink>
       </section>
     </div>
   );

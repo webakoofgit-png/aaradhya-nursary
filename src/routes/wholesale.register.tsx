@@ -1,11 +1,16 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent, type InputHTMLAttributes } from "react";
 import { Check, ChevronLeft, ChevronRight, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/site/PageHeader";
 import { registerB2b } from "@/server/b2b-actions";
 
-export const Route = createFileRoute("/wholesale/register")({ component: RegistrationPage });
+export const Route = createFileRoute("/wholesale/register")({
+  beforeLoad: () => {
+    throw redirect({ to: "/wholesale" });
+  },
+  component: RegistrationPage,
+});
 
 const steps = ["Personal", "Business", "Address", "Documents"];
 const fieldsByStep = [

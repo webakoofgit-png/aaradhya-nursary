@@ -14,10 +14,8 @@ const shop = [
 ];
 
 const wholesale = [
-  ["B2B Registration", "/wholesale/register"],
-  ["B2B Login", "/wholesale/login"],
+  ["Wholesale Enquiry", "/wholesale"],
   ["Wholesale Products", "/category/wholesale-products"],
-  ["Bulk Quotation", "/bulk-quote"],
   ["Wholesale FAQs", "/faqs"],
 ];
 
