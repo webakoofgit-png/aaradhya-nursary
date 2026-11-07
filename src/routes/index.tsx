@@ -13,6 +13,7 @@ import {
 import { HeroSlider } from "@/components/site/HeroSlider";
 import { CategoryStrip } from "@/components/site/CategoryStrip";
 import { ProductCarousel } from "@/components/site/ProductCarousel";
+import nurseryAboutSection from "@/assets/nursery-about-section.png";
 import { SectionHeading } from "@/components/site/SectionHeading";
 import { AppLink } from "@/components/site/AppLink";
 import { Stars } from "@/components/site/Stars";
@@ -27,7 +28,6 @@ import {
 import {
   blogs,
   byCategory,
-  byGroup,
   images,
   products,
   requirementShortcuts,
@@ -80,6 +80,8 @@ function Home() {
     <>
       <HeroSlider />
 
+      <CategoryStrip />
+
       <section className="mx-auto max-w-7xl px-4 pt-12 sm:px-6 lg:px-8">
         <SectionHeading
           title="Our Products"
@@ -89,55 +91,17 @@ function Home() {
       </section>
 
       <ProductCarousel
-        title="Bestselling Plants"
-        subtitle="Popular picks from our plant range"
-        viewAllTo="/category/bestsellers"
-        items={byGroup("bestsellers").slice(0, 4)}
-      />
-      <ProductCarousel
-        title="New Arrivals"
-        subtitle="Recently added to the nursery"
-        viewAllTo="/category/new-arrivals"
-        items={byGroup("new").slice(0, 4)}
-      />
-      <ProductCarousel
         title="Indoor Plants"
         subtitle="Plants chosen for indoor spaces"
         viewAllTo="/category/indoor-plants"
         items={byCategory("indoor-plants").slice(0, 4)}
       />
       <ProductCarousel
-        title="Flowering Plants"
-        subtitle="Season-long colour for your garden"
-        viewAllTo="/category/flowering-plants"
-        items={byCategory("flowering-plants").slice(0, 4)}
+        title="Outdoor Plants"
+        subtitle="Sun-loving plants for balconies, terraces and gardens"
+        viewAllTo="/category/outdoor-plants"
+        items={byCategory("outdoor-plants").slice(0, 4)}
       />
-      <ProductCarousel
-        title="Seasonal Seeds"
-        subtitle="Sow now, harvest soon"
-        viewAllTo="/category/seasonal-seeds"
-        items={byGroup("seasonal").slice(0, 4)}
-      />
-      <ProductCarousel
-        title="Gardening Essentials"
-        subtitle="Tools, soil and plant care"
-        viewAllTo="/category/plant-care"
-        items={byGroup("essentials").slice(0, 4)}
-      />
-      <ProductCarousel
-        title="Ready-to-Grow Kits"
-        subtitle="Everything in one box"
-        viewAllTo="/category/gardening-kits"
-        items={byCategory("gardening-kits").slice(0, 4)}
-      />
-      {primaryOffer ? (
-        <ProductCarousel
-          title="Special Offers"
-          subtitle={primaryOffer.offerName || "Current nursery offers"}
-          viewAllTo="/category/offers"
-          items={offerProducts.slice(0, 4)}
-        />
-      ) : null}
 
       <section className="mx-auto grid max-w-7xl gap-5 px-4 py-10 sm:px-6 md:grid-cols-2 lg:px-8">
         {[
@@ -187,12 +151,10 @@ function Home() {
         ))}
       </section>
 
-      <CategoryStrip />
-
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid overflow-hidden rounded-2xl bg-leaf-deep text-primary-foreground md:grid-cols-[1.05fr_0.95fr]">
           <img
-            src={images.aboutImg}
+            src={nurseryAboutSection}
             alt="Plants at Aaradhya rose nursary in Pune"
             loading="lazy"
             className="h-64 w-full object-cover md:h-full md:min-h-[360px]"
