@@ -18,6 +18,8 @@ import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { FloatingActions } from "@/components/site/FloatingActions";
 import { Chatbot } from "@/components/site/Chatbot";
+import { getRetailCatalog } from "@/server/catalog-actions";
+import { replaceCatalogData } from "@/data/catalog";
 
 function NotFoundComponent() {
   return (
@@ -80,6 +82,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  loader: () => getRetailCatalog(),
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -144,6 +147,8 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const catalog = Route.useLoaderData();
+  replaceCatalogData(catalog.products, catalog.categories);
 
   return (
     <QueryClientProvider client={queryClient}>

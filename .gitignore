@@ -18,6 +18,9 @@ dist-ssr
 .playwright-cli/
 .data/
 *.local
+.env
+.env.*
+!.env.example
 
 # Wrangler / Cloudflare
 .wrangler/

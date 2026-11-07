@@ -20,7 +20,7 @@ export function ProductCard({
   const [size, setSize] = useState(product.potSize);
   const [quick, setQuick] = useState(false);
   const price = priceOf(product);
-  const discount = Math.round(((product.mrp - product.price) / product.mrp) * 100);
+  const discount = product.mrp > 0 ? Math.round(((product.mrp - price) / product.mrp) * 100) : 0;
   const wished = inWishlist(product.slug);
   const isPlant = ["indoor-plants", "outdoor-plants", "flowering-plants"].includes(
     product.categorySlug,
@@ -82,6 +82,11 @@ export function ProductCard({
             {product.groups.includes("new") ? (
               <span className="rounded-full bg-foreground/85 px-2.5 py-1 text-[11px] font-semibold text-background">
                 New
+              </span>
+            ) : null}
+            {product.offerName ? (
+              <span className="max-w-40 rounded-full bg-accent px-2.5 py-1 text-[11px] font-semibold text-accent-foreground">
+                {product.offerName}
               </span>
             ) : null}
           </div>
@@ -170,12 +175,14 @@ export function ProductCard({
               <ShoppingCart size={15} /> Add
             </button>
           </div>
-          <AppLink
-            to="/wholesale/register"
-            className="mt-2 inline-flex h-9 items-center justify-center rounded-full bg-accent px-3 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent/85"
-          >
-            B2B / Wholesale
-          </AppLink>
+          {product.wholesale ? (
+            <AppLink
+              to="/wholesale/register"
+              className="mt-2 inline-flex h-9 items-center justify-center rounded-full bg-accent px-3 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent/85"
+            >
+              B2B / Wholesale
+            </AppLink>
+          ) : null}
         </div>
       </article>
 

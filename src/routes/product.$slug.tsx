@@ -11,12 +11,15 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { getProduct, products } from "@/data/catalog";
+import { getProduct, products, replaceCatalogData } from "@/data/catalog";
+import { getRetailCatalog } from "@/server/catalog-actions";
 import { inr, useStore } from "@/lib/store";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/product/$slug")({
-  loader: ({ params }: { params: { slug: string } }) => {
+  loader: async ({ params }: { params: { slug: string } }) => {
+    const catalog = await getRetailCatalog();
+    replaceCatalogData(catalog.products, catalog.categories);
     const p = getProduct(params.slug);
     if (!p) throw notFound();
     return { name: p.name, description: p.description, slug: p.slug };
@@ -215,10 +218,7 @@ function ProductPage() {
               <button
                 type="button"
                 disabled={!product.inStock}
-                onClick={() => {
-                  addToCart(product.slug, qty, size, pot);
-                  void navigate({ to: "/checkout" });
-                }}
+                onClick={() => addToCart(product.slug, qty, size, pot)}
                 className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-leaf-deep disabled:opacity-50"
               >
                 <ShoppingCart size={16} /> Add to Cart
@@ -226,7 +226,10 @@ function ProductPage() {
               <button
                 type="button"
                 disabled={!product.inStock}
-                onClick={() => addToCart(product.slug, qty, size, pot)}
+                onClick={() => {
+                  addToCart(product.slug, qty, size, pot);
+                  void navigate({ to: "/checkout" });
+                }}
                 className="rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground disabled:opacity-50"
               >
                 Buy Now

@@ -6,6 +6,13 @@ const COOKIE = "vr_session";
 
 type CustomerAuthRow = { id: number; status: string; business_name: string };
 type AdminAuthRow = { id: number };
+type RetailAuthRow = {
+  id: number;
+  status: string;
+  full_name: string;
+  email: string;
+  mobile: string;
+};
 
 export function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
@@ -21,7 +28,7 @@ export function verifyPassword(password: string, stored: string) {
   return actual.length === expectedBuffer.length && timingSafeEqual(actual, expectedBuffer);
 }
 
-export function createSession(
+export async function createSession(
   actorType: SessionActor["actorType"],
   actorId: number,
   remember = false,
@@ -29,12 +36,9 @@ export function createSession(
   const id = randomBytes(32).toString("hex");
   const maxAge = remember ? 60 * 60 * 24 * 30 : 60 * 60 * 8;
   const expires = new Date(Date.now() + maxAge * 1000);
-  db.prepare("INSERT INTO sessions(id,actor_type,actor_id,expires_at) VALUES (?,?,?,?)").run(
-    id,
-    actorType,
-    actorId,
-    expires.toISOString(),
-  );
+  await db
+    .prepare("INSERT INTO sessions(id,actor_type,actor_id,expires_at) VALUES (?,?,?,?)")
+    .run(id, actorType, actorId, expires);
   setCookie(COOKIE, id, {
     httpOnly: true,
     sameSite: "lax",
@@ -44,52 +48,49 @@ export function createSession(
   });
 }
 
-export function getSession(): SessionActor | null {
+export async function getSession(): Promise<SessionActor | null> {
   const id = getCookie(COOKIE);
   if (!id) return null;
-  const row = db
-    .prepare("SELECT actor_type,actor_id FROM sessions WHERE id=? AND expires_at > ?")
-    .get(id, new Date().toISOString()) as
-    { actor_type: SessionActor["actorType"]; actor_id: number } | undefined;
+  const row = (await db
+    .prepare(
+      "SELECT actor_type,actor_id FROM sessions WHERE id=? AND expires_at > CURRENT_TIMESTAMP",
+    )
+    .get(id)) as { actor_type: SessionActor["actorType"]; actor_id: number } | undefined;
   return row ? { actorType: row.actor_type, actorId: row.actor_id } : null;
 }
 
-export function requireCustomer(): CustomerAuthRow {
-  const session = getSession();
+export async function requireCustomer(): Promise<CustomerAuthRow> {
+  const session = await getSession();
   if (!session || session.actorType !== "customer") throw new Error("UNAUTHORIZED");
-  const customer = db.prepare("SELECT * FROM b2b_customers WHERE id=?").get(session.actorId) as
-    CustomerAuthRow | undefined;
+  const customer = (await db
+    .prepare("SELECT * FROM b2b_customers WHERE id=?")
+    .get(session.actorId)) as CustomerAuthRow | undefined;
   if (!customer || customer.status !== "approved") throw new Error("ACCOUNT_NOT_APPROVED");
   return customer;
 }
 
-export function requireAdmin(): AdminAuthRow {
-  const session = getSession();
+export async function requireAdmin(): Promise<AdminAuthRow> {
+  const session = await getSession();
   if (!session || session.actorType !== "admin") throw new Error("UNAUTHORIZED");
-  const admin = db
+  const admin = (await db
     .prepare("SELECT * FROM admin_users WHERE id=? AND active=1")
-    .get(session.actorId) as AdminAuthRow | undefined;
+    .get(session.actorId)) as AdminAuthRow | undefined;
   if (!admin) throw new Error("UNAUTHORIZED");
   return admin;
 }
 
-export function logout() {
+export async function requireRetailCustomer(): Promise<RetailAuthRow> {
+  const session = await getSession();
+  if (!session || session.actorType !== "retail") throw new Error("UNAUTHORIZED");
+  const customer = (await db
+    .prepare("SELECT id,status,full_name,email,mobile FROM retail_customers WHERE id=?")
+    .get(session.actorId)) as RetailAuthRow | undefined;
+  if (!customer || customer.status !== "active") throw new Error("ACCOUNT_SUSPENDED");
+  return customer;
+}
+
+export async function logout() {
   const id = getCookie(COOKIE);
-  if (id) db.prepare("DELETE FROM sessions WHERE id=?").run(id);
+  if (id) await db.prepare("DELETE FROM sessions WHERE id=?").run(id);
   deleteCookie(COOKIE, { path: "/" });
 }
-
-export function seedAdmin() {
-  const email = process.env["ADMIN_EMAIL"] ?? "admin@verdantroots.in";
-  const exists = db.prepare("SELECT id FROM admin_users WHERE email=?").get(email);
-  if (!exists) {
-    const password = process.env["ADMIN_PASSWORD"] ?? "Admin@12345";
-    db.prepare("INSERT INTO admin_users(email,name,password_hash) VALUES (?,?,?)").run(
-      email,
-      "Verdant Administrator",
-      hashPassword(password),
-    );
-  }
-}
-
-seedAdmin();

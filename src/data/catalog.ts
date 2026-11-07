@@ -78,6 +78,12 @@ export type Product = {
   difficulty: "Easy" | "Moderate";
   description: string;
   care: string[];
+  offerId?: number | undefined;
+  offerName?: string | undefined;
+  offerType?: "percentage" | "fixed" | "buy_x_get_percentage" | undefined;
+  offerValue?: number | undefined;
+  offerBuyQuantity?: number | undefined;
+  offerRewardQuantity?: number | undefined;
 };
 
 type Seed = Partial<Product> & {
@@ -1043,7 +1049,7 @@ const seeds: Seed[] = [
   },
 ];
 
-export const products: Product[] = seeds.map(make);
+export let products: Product[] = seeds.map(make);
 
 export const getProduct = (slug: string) => products.find((p) => p.slug === slug);
 export const byGroup = (g: string, n = 8) =>
@@ -1059,9 +1065,10 @@ export type CategoryDef = {
   title: string;
   blurb: string;
   match: (p: Product) => boolean;
+  managed?: boolean | undefined;
 };
 
-export const categoryPages: CategoryDef[] = [
+export let categoryPages: CategoryDef[] = [
   {
     slug: "all",
     title: "All Products",
@@ -1156,7 +1163,7 @@ export const categoryPages: CategoryDef[] = [
     slug: "offers",
     title: "Offers",
     blurb: "Limited period nursery deals across every category.",
-    match: (p) => (p.mrp - p.price) / p.mrp >= 0.3,
+    match: (p) => Boolean(p.offerId),
   },
   {
     slug: "new-arrivals",
@@ -1279,6 +1286,26 @@ export const categoryPages: CategoryDef[] = [
     match: (p) => p.groups.includes("essentials"),
   },
 ];
+
+export function replaceCatalogData(
+  nextProducts: Product[],
+  managedCategories: { name: string; slug: string; description?: string | null }[],
+) {
+  products = nextProducts;
+  const baseCategories = categoryPages.filter((category) => !category.managed);
+  categoryPages = [
+    ...baseCategories,
+    ...managedCategories
+      .filter((category) => !baseCategories.some((existing) => existing.slug === category.slug))
+      .map((category) => ({
+        slug: category.slug,
+        title: category.name,
+        blurb: category.description || `Shop ${category.name} from our nursery catalogue.`,
+        match: (product: Product) => product.categorySlug === category.slug,
+        managed: true,
+      })),
+  ];
+}
 
 export const getCategory = (slug: string) => categoryPages.find((c) => c.slug === slug);
 
@@ -1545,7 +1572,7 @@ export const faqs = [
   },
   {
     q: "Which payment methods are accepted?",
-    a: "UPI, credit and debit cards, net banking and cash on delivery for retail. Approved B2B accounts can request credit terms.",
+    a: "UPI and cash on delivery are available for retail orders. Approved B2B accounts can request credit terms.",
   },
 ];
 
@@ -1561,7 +1588,7 @@ export const trustFeatures = [
     text: "Ventilated, shock-proof nursery cartons",
   },
   { icon: "Truck", title: "Pan-India Delivery", text: "20,000+ pin codes served" },
-  { icon: "Lock", title: "Secure Payments", text: "UPI, cards, net banking and COD" },
+  { icon: "Lock", title: "Secure Payments", text: "UPI and cash on delivery" },
   { icon: "Leaf", title: "Gardening Guidance", text: "Free care cards and expert support" },
   { icon: "Store", title: "Retail & Wholesale", text: "One nursery, two ways to buy" },
 ];

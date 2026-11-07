@@ -1,9 +1,12 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { ProductListing } from "@/components/site/ProductListing";
-import { getCategory, images, products } from "@/data/catalog";
+import { getCategory, images, products, replaceCatalogData } from "@/data/catalog";
+import { getRetailCatalog } from "@/server/catalog-actions";
 
 export const Route = createFileRoute("/category/$slug")({
-  loader: ({ params }: { params: { slug: string } }) => {
+  loader: async ({ params }: { params: { slug: string } }) => {
+    const catalog = await getRetailCatalog();
+    replaceCatalogData(catalog.products, catalog.categories);
     const cat = getCategory(params.slug);
     if (!cat) throw notFound();
     return { title: cat.title, blurb: cat.blurb, slug: cat.slug };
@@ -41,8 +44,8 @@ function CategoryPage() {
       {slug === "offers" ? (
         <div className="mx-auto mt-6 max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="rounded-2xl bg-primary px-5 py-4 text-center text-primary-foreground">
-            <p className="font-semibold">Buy any 2 eligible plants, get 50% off the third</p>
-            <p className="mt-1 text-sm">Offer applies to sale plants. The lowest priced eligible plant gets 50% off.</p>
+            <p className="font-semibold">{items[0]?.offerName || "Special nursery offers"}</p>
+            <p className="mt-1 text-sm">Active discounts are applied automatically in your cart.</p>
           </div>
         </div>
       ) : null}

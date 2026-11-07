@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Trash2 } from "lucide-react";
+import { Gift, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/site/PageHeader";
 import { AppLink } from "@/components/site/AppLink";
 import { getProduct } from "@/data/catalog";
@@ -52,7 +52,7 @@ function CartPage() {
               if (!p) return null;
               return (
                 <div
-                  key={line.slug + line.size + line.pot}
+                  key={line.slug + line.size + line.pot + Boolean(line.gift)}
                   className="grid grid-cols-[88px_minmax(0,1fr)] gap-4 rounded-2xl border border-border bg-card p-4"
                 >
                   <img
@@ -62,7 +62,14 @@ function CartPage() {
                     className="h-22 w-22 rounded-xl object-cover"
                   />
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold">{p.name}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="truncate text-sm font-semibold">{p.name}</p>
+                      {line.gift ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-accent/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-leaf-deep">
+                          <Gift size={11} /> Gift plant
+                        </span>
+                      ) : null}
+                    </div>
                     <p className="text-xs text-muted-foreground">
                       {line.size} · {line.pot}
                     </p>
@@ -139,7 +146,7 @@ function CartPage() {
             </div>
             {plantOfferDiscount > 0 ? (
               <div className="flex justify-between text-primary">
-                <dt>50% off third eligible plant</dt>
+                <dt>Offer discount</dt>
                 <dd>-{inr(plantOfferDiscount)}</dd>
               </div>
             ) : null}

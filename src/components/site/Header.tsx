@@ -15,6 +15,7 @@ const navLinks = [
   { label: "Seeds", to: "/category/seeds", menu: "seeds" as const },
   { label: "Gardening", to: "/category/plant-care", menu: "gardening" as const },
   { label: "Offers", to: "/category/offers" },
+  { label: "Plant Gifts", to: "/gifts" },
   { label: "About Us", to: "/about" },
   { label: "Blogs", to: "/blogs" },
   { label: "Contact Us", to: "/contact" },

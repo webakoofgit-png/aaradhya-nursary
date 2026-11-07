@@ -61,6 +61,8 @@ function Home() {
   const [reviewsApi, setReviewsApi] = useState<CarouselApi>();
   const [reviewsPaused, setReviewsPaused] = useState(false);
   const setReviewsCarouselApi = useCallback((api: CarouselApi) => setReviewsApi(api), []);
+  const offerProducts = products.filter((product) => product.offerId);
+  const primaryOffer = offerProducts[0];
 
   useEffect(() => {
     if (
@@ -128,12 +130,14 @@ function Home() {
         viewAllTo="/category/gardening-kits"
         items={byCategory("gardening-kits").slice(0, 4)}
       />
-      <ProductCarousel
-        title="Special Offers"
-        subtitle="Buy two eligible sale plants and get 50% off the third"
-        viewAllTo="/category/offers"
-        items={products.filter((p) => (p.mrp - p.price) / p.mrp >= 0.3).slice(0, 4)}
-      />
+      {primaryOffer ? (
+        <ProductCarousel
+          title="Special Offers"
+          subtitle={primaryOffer.offerName || "Current nursery offers"}
+          viewAllTo="/category/offers"
+          items={offerProducts.slice(0, 4)}
+        />
+      ) : null}
 
       <section className="mx-auto grid max-w-7xl gap-5 px-4 py-10 sm:px-6 md:grid-cols-2 lg:px-8">
         {[
@@ -234,30 +238,31 @@ function Home() {
         </div>
       </section>
 
-      <section className="relative my-10 overflow-hidden">
-        <img
-          src={images.bannerSeasonal}
-          alt="Seasonal nursery collection"
-          loading="lazy"
-          className="h-72 w-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-foreground/80 to-foreground/20" />
-        <div className="absolute inset-0 mx-auto flex max-w-7xl flex-col justify-center px-6 lg:px-8">
-          <h2 className="max-w-lg font-display text-3xl text-background sm:text-4xl">
-            A Little Extra for Your Next Planting
-          </h2>
-          <p className="mt-3 max-w-md text-sm text-background/85">
-            Buy two eligible sale plants and get 50% off the third. The lowest priced eligible plant
-            gets the discount.
-          </p>
-          <AppLink
-            to="/category/offers"
-            className="mt-6 w-fit rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground"
-          >
-            View Offers
-          </AppLink>
-        </div>
-      </section>
+      {primaryOffer ? (
+        <section className="relative my-10 overflow-hidden">
+          <img
+            src={images.bannerSeasonal}
+            alt="Seasonal nursery collection"
+            loading="lazy"
+            className="h-72 w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-foreground/80 to-foreground/20" />
+          <div className="absolute inset-0 mx-auto flex max-w-7xl flex-col justify-center px-6 lg:px-8">
+            <h2 className="max-w-lg font-display text-3xl text-background sm:text-4xl">
+              A Little Extra for Your Next Planting
+            </h2>
+            <p className="mt-3 max-w-md text-sm text-background/85">
+              {primaryOffer.offerName || "Limited-time savings on selected nursery products."}
+            </p>
+            <AppLink
+              to="/category/offers"
+              className="mt-6 w-fit rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground"
+            >
+              View Offers
+            </AppLink>
+          </div>
+        </section>
+      ) : null}
 
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <SectionHeading

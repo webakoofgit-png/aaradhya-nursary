@@ -19,9 +19,13 @@ import { Route as CartRouteImport } from './routes/cart'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as FaqsRouteImport } from './routes/faqs'
+import { Route as GiftsRouteImport } from './routes/gifts'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
+import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ReturnPolicyRouteImport } from './routes/return-policy'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as ServicesRouteImport } from './routes/services'
 import { Route as ShippingPolicyRouteImport } from './routes/shipping-policy'
 import { Route as SitemapRouteImport } from './routes/sitemap'
 import { Route as TermsRouteImport } from './routes/terms'
@@ -88,9 +92,24 @@ const FaqsRoute = FaqsRouteImport.update({
   path: '/faqs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GiftsRoute = GiftsRouteImport.update({
+  id: '/gifts',
+  path: '/gifts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
   id: '/privacy-policy',
   path: '/privacy-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReturnPolicyRoute = ReturnPolicyRouteImport.update({
@@ -101,6 +120,11 @@ const ReturnPolicyRoute = ReturnPolicyRouteImport.update({
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServicesRoute = ServicesRouteImport.update({
+  id: '/services',
+  path: '/services',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ShippingPolicyRoute = ShippingPolicyRouteImport.update({
@@ -190,9 +214,13 @@ export interface FileRoutesByFullPath {
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
   '/faqs': typeof FaqsRoute
+  '/gifts': typeof GiftsRoute
+  '/login': typeof LoginRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
+  '/register': typeof RegisterRoute
   '/return-policy': typeof ReturnPolicyRoute
   '/search': typeof SearchRoute
+  '/services': typeof ServicesRoute
   '/shipping-policy': typeof ShippingPolicyRoute
   '/sitemap': typeof SitemapRoute
   '/terms': typeof TermsRoute
@@ -220,9 +248,13 @@ export interface FileRoutesByTo {
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
   '/faqs': typeof FaqsRoute
+  '/gifts': typeof GiftsRoute
+  '/login': typeof LoginRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
+  '/register': typeof RegisterRoute
   '/return-policy': typeof ReturnPolicyRoute
   '/search': typeof SearchRoute
+  '/services': typeof ServicesRoute
   '/shipping-policy': typeof ShippingPolicyRoute
   '/sitemap': typeof SitemapRoute
   '/terms': typeof TermsRoute
@@ -251,9 +283,13 @@ export interface FileRoutesById {
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
   '/faqs': typeof FaqsRoute
+  '/gifts': typeof GiftsRoute
+  '/login': typeof LoginRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
+  '/register': typeof RegisterRoute
   '/return-policy': typeof ReturnPolicyRoute
   '/search': typeof SearchRoute
+  '/services': typeof ServicesRoute
   '/shipping-policy': typeof ShippingPolicyRoute
   '/sitemap': typeof SitemapRoute
   '/terms': typeof TermsRoute
@@ -283,9 +319,13 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/contact'
     | '/faqs'
+    | '/gifts'
+    | '/login'
     | '/privacy-policy'
+    | '/register'
     | '/return-policy'
     | '/search'
+    | '/services'
     | '/shipping-policy'
     | '/sitemap'
     | '/terms'
@@ -313,9 +353,13 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/contact'
     | '/faqs'
+    | '/gifts'
+    | '/login'
     | '/privacy-policy'
+    | '/register'
     | '/return-policy'
     | '/search'
+    | '/services'
     | '/shipping-policy'
     | '/sitemap'
     | '/terms'
@@ -343,9 +387,13 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/contact'
     | '/faqs'
+    | '/gifts'
+    | '/login'
     | '/privacy-policy'
+    | '/register'
     | '/return-policy'
     | '/search'
+    | '/services'
     | '/shipping-policy'
     | '/sitemap'
     | '/terms'
@@ -374,9 +422,13 @@ export interface RootRouteChildren {
   CheckoutRoute: typeof CheckoutRoute
   ContactRoute: typeof ContactRoute
   FaqsRoute: typeof FaqsRoute
+  GiftsRoute: typeof GiftsRoute
+  LoginRoute: typeof LoginRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
+  RegisterRoute: typeof RegisterRoute
   ReturnPolicyRoute: typeof ReturnPolicyRoute
   SearchRoute: typeof SearchRoute
+  ServicesRoute: typeof ServicesRoute
   ShippingPolicyRoute: typeof ShippingPolicyRoute
   SitemapRoute: typeof SitemapRoute
   TermsRoute: typeof TermsRoute
@@ -466,11 +518,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FaqsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/gifts': {
+      id: '/gifts'
+      path: '/gifts'
+      fullPath: '/gifts'
+      preLoaderRoute: typeof GiftsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/privacy-policy': {
       id: '/privacy-policy'
       path: '/privacy-policy'
       fullPath: '/privacy-policy'
       preLoaderRoute: typeof PrivacyPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/return-policy': {
@@ -485,6 +558,13 @@ declare module '@tanstack/react-router' {
       path: '/search'
       fullPath: '/search'
       preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/services': {
+      id: '/services'
+      path: '/services'
+      fullPath: '/services'
+      preLoaderRoute: typeof ServicesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/shipping-policy': {
@@ -606,9 +686,13 @@ const rootRouteChildren: RootRouteChildren = {
   CheckoutRoute: CheckoutRoute,
   ContactRoute: ContactRoute,
   FaqsRoute: FaqsRoute,
+  GiftsRoute: GiftsRoute,
+  LoginRoute: LoginRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
+  RegisterRoute: RegisterRoute,
   ReturnPolicyRoute: ReturnPolicyRoute,
   SearchRoute: SearchRoute,
+  ServicesRoute: ServicesRoute,
   ShippingPolicyRoute: ShippingPolicyRoute,
   SitemapRoute: SitemapRoute,
   TermsRoute: TermsRoute,

@@ -7,6 +7,7 @@ export type CartLine = {
   qty: number;
   size: string;
   pot: string;
+  gift?: boolean;
 };
 
 type StoreValue = {
@@ -14,6 +15,7 @@ type StoreValue = {
   wishlist: string[];
   recent: string[];
   addToCart: (slug: string, qty?: number, size?: string, pot?: string) => void;
+  addGiftToCart: (slugs: string[]) => void;
   removeFromCart: (line: CartLine) => void;
   setQty: (line: CartLine, qty: number) => void;
   clearCart: () => void;
@@ -58,27 +60,33 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [cart, wishlist, recent, hydrated]);
 
   const value = useMemo<StoreValue>(() => {
-    const priceOf = (p: Product) => p.price;
-    const eligiblePlantLines = cart
-      .map((line) => ({ line, product: products.find((p) => p.slug === line.slug) }))
-      .filter(
-        (entry): entry is { line: CartLine; product: Product } =>
-          entry.product !== undefined &&
-          ["indoor-plants", "outdoor-plants", "flowering-plants"].includes(
-            entry.product.categorySlug,
-          ) &&
-          (entry.product.mrp - entry.product.price) / entry.product.mrp >= 0.3,
-      );
-    let freePlants = Math.floor(
-      eligiblePlantLines.reduce((sum, entry) => sum + entry.line.qty, 0) / 3,
-    );
-    const plantOfferDiscount = eligiblePlantLines
-      .sort((a, b) => a.product.price - b.product.price)
-      .reduce((discount, entry) => {
-        const freeHere = Math.min(freePlants, entry.line.qty);
-        freePlants -= freeHere;
-        return discount + freeHere * entry.product.price * 0.5;
-      }, 0);
+    const priceOf = (p: Product) => {
+      if (p.offerType === "percentage")
+        return Math.max(0, p.price * (1 - Number(p.offerValue || 0) / 100));
+      if (p.offerType === "fixed") return Math.max(0, p.price - Number(p.offerValue || 0));
+      return p.price;
+    };
+    const buyOffers = new Map<number, { line: CartLine; product: Product }[]>();
+    for (const line of cart) {
+      const product = products.find((item) => item.slug === line.slug);
+      if (!product?.offerId || product.offerType !== "buy_x_get_percentage") continue;
+      const entries = buyOffers.get(product.offerId) ?? [];
+      entries.push({ line, product });
+      buyOffers.set(product.offerId, entries);
+    }
+    let plantOfferDiscount = 0;
+    for (const entries of buyOffers.values()) {
+      const sample = entries[0]!.product;
+      const buy = Math.max(1, Number(sample.offerBuyQuantity || 1));
+      const reward = Math.max(1, Number(sample.offerRewardQuantity || 1));
+      const total = entries.reduce((sum, entry) => sum + entry.line.qty, 0);
+      let discountedUnits = Math.floor(total / (buy + reward)) * reward;
+      for (const entry of [...entries].sort((a, b) => a.product.price - b.product.price)) {
+        const units = Math.min(discountedUnits, entry.line.qty);
+        discountedUnits -= units;
+        plantOfferDiscount += units * entry.product.price * (Number(sample.offerValue || 0) / 100);
+      }
+    }
 
     return {
       cart,
@@ -88,7 +96,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const product = products.find((p) => p.slug === slug);
         if (!product) return;
         setCart((prev) => {
-          const existing = prev.find((l) => l.slug === slug && l.size === size && l.pot === pot);
+          const existing = prev.find(
+            (l) => l.slug === slug && l.size === size && l.pot === pot && !l.gift,
+          );
           if (existing) {
             return prev.map((l) => (l === existing ? { ...l, qty: l.qty + qty } : l));
           }
@@ -96,16 +106,61 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         });
         toast.success(`${product.name} added to cart`);
       },
+      addGiftToCart: (slugs) => {
+        const giftProducts = slugs
+          .map((slug) => products.find((product) => product.slug === slug))
+          .filter((product): product is Product => product !== undefined);
+        if (giftProducts.length === 0) return;
+
+        setCart((previous) => {
+          let next = [...previous];
+          giftProducts.forEach((product) => {
+            const existingIndex = next.findIndex(
+              (line) =>
+                line.slug === product.slug &&
+                line.size === product.size &&
+                line.pot === product.potType &&
+                line.gift === true,
+            );
+            if (existingIndex >= 0) {
+              next = next.map((line, index) =>
+                index === existingIndex ? { ...line, qty: line.qty + 1 } : line,
+              );
+            } else {
+              next.push({
+                slug: product.slug,
+                qty: 1,
+                size: product.size,
+                pot: product.potType,
+                gift: true,
+              });
+            }
+          });
+          return next;
+        });
+        toast.success(`${giftProducts.length}-plant gift added to cart`);
+      },
       removeFromCart: (line) => {
         setCart((prev) =>
-          prev.filter((l) => !(l.slug === line.slug && l.size === line.size && l.pot === line.pot)),
+          prev.filter(
+            (l) =>
+              !(
+                l.slug === line.slug &&
+                l.size === line.size &&
+                l.pot === line.pot &&
+                Boolean(l.gift) === Boolean(line.gift)
+              ),
+          ),
         );
         toast("Removed from cart");
       },
       setQty: (line, qty) =>
         setCart((prev) =>
           prev.map((l) =>
-            l.slug === line.slug && l.size === line.size && l.pot === line.pot
+            l.slug === line.slug &&
+            l.size === line.size &&
+            l.pot === line.pot &&
+            Boolean(l.gift) === Boolean(line.gift)
               ? { ...l, qty: Math.max(1, Math.min(99, qty)) }
               : l,
           ),

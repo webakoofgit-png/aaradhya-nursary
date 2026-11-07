@@ -11,7 +11,11 @@ import {
   LogOut,
   Search,
   Settings,
+  Tags,
+  BadgePercent,
+  Trash2,
   Users,
+  ShoppingBag,
 } from "lucide-react";
 import { toast } from "sonner";
 import Papa from "papaparse";
@@ -24,9 +28,17 @@ import {
   logoutB2b,
   markNotificationRead,
   saveProduct,
+  deleteProduct,
+  deleteProductImage,
+  reorderProductImages,
+  saveCategory,
+  deleteCategory,
+  saveOffer,
+  deleteOffer,
   updateCustomerStatus,
   updateQuotationStatus,
   updateSystemSettings,
+  updateRetailOrderStatus,
 } from "@/server/b2b-actions";
 
 type Row = {
@@ -66,6 +78,7 @@ type Row = {
   stock?: number;
   message?: string;
   created_at?: string;
+  last_login_at?: string | null;
   quotation_id?: number;
   product_name?: string;
   quantity?: number;
@@ -81,6 +94,9 @@ type Row = {
 };
 type AdminData = {
   customers: Row[];
+  retailCustomers: Row[];
+  retailOrders: Row[];
+  retailOrderItems: Row[];
   quotations: Row[];
   notifications: Row[];
   products: Row[];
@@ -88,6 +104,9 @@ type AdminData = {
   settings: Row[];
   quotationItems: Row[];
   notes: Row[];
+  categories: Row[];
+  offers: Row[];
+  productImages: Row[];
 };
 
 export const Route = createFileRoute("/admin/")({
@@ -100,14 +119,31 @@ export const Route = createFileRoute("/admin/")({
 });
 
 const tabs = [
+  ["Retail Customers", Users],
+  ["Retail Orders", ShoppingBag],
   ["Customers", Users],
   ["Quotations", FileText],
   ["Products", Boxes],
+  ["Categories", Tags],
+  ["Offers", BadgePercent],
   ["Notifications", Bell],
   ["Settings", Settings],
 ] as const;
 const money = (value: unknown) =>
   `Rs. ${Number(value).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
+const parseList = (value: unknown): string[] => {
+  if (Array.isArray(value)) return value.map(String);
+  if (typeof value !== "string" || !value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.map(String) : [];
+  } catch {
+    return value
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+};
 const statusClass = (status: unknown) =>
   status === "approved" || status === "converted to order"
     ? "bg-secondary text-leaf-deep"
@@ -138,7 +174,7 @@ async function productImagePayload(file: File) {
 function AdminDashboard() {
   const initial = Route.useLoaderData() as AdminData;
   const [data, setData] = useState(initial);
-  const [tab, setTab] = useState<(typeof tabs)[number][0]>("Customers");
+  const [tab, setTab] = useState<(typeof tabs)[number][0]>("Retail Customers");
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
   const navigate = useNavigate();
@@ -185,6 +221,10 @@ function AdminDashboard() {
           ))}
         </aside>
         <main className="min-w-0 rounded-md border border-border bg-card p-4 sm:p-6">
+          {tab === "Retail Customers" ? <RetailCustomers rows={data.retailCustomers} /> : null}
+          {tab === "Retail Orders" ? (
+            <RetailOrders rows={data.retailOrders} refresh={refresh} />
+          ) : null}
           {tab === "Customers" ? (
             <Customers
               data={data}
@@ -196,18 +236,213 @@ function AdminDashboard() {
             />
           ) : null}
           {tab === "Quotations" ? <Quotations data={data} refresh={refresh} /> : null}
-          {tab === "Products" ? <Products rows={data.products} refresh={refresh} /> : null}
+          {tab === "Products" ? (
+            <Products rows={data.products} images={data.productImages} refresh={refresh} />
+          ) : null}
+          {tab === "Categories" ? <Categories rows={data.categories} refresh={refresh} /> : null}
+          {tab === "Offers" ? (
+            <Offers
+              rows={data.offers}
+              products={data.products}
+              categories={data.categories}
+              refresh={refresh}
+            />
+          ) : null}
           {tab === "Notifications" ? (
             <Notifications
               rows={data.notifications}
               refresh={refresh}
-              open={(row) => setTab(row.entity_type === "quotation" ? "Quotations" : "Customers")}
+              open={(row) =>
+                setTab(
+                  row.entity_type === "quotation"
+                    ? "Quotations"
+                    : row.entity_type === "retail_order"
+                      ? "Retail Orders"
+                      : row.entity_type === "retail_customer"
+                        ? "Retail Customers"
+                        : "Customers",
+                )
+              }
             />
           ) : null}
           {tab === "Settings" ? <SettingsPanel settings={data.settings} /> : null}
         </main>
       </div>
     </div>
+  );
+}
+
+function RetailCustomers({ rows }: { rows: Row[] }) {
+  const [query, setQuery] = useState("");
+  const shown = rows.filter((row) =>
+    `${row.full_name} ${row.email} ${row.mobile}`.toLowerCase().includes(query.toLowerCase()),
+  );
+  return (
+    <section>
+      <Title title="Retail Customers" count={shown.length} />
+      <Toolbar query={query} setQuery={setQuery}>
+        <button
+          onClick={() => exportCsv("retail-customers.csv", shown)}
+          className="inline-flex items-center gap-2 rounded-md border px-3 text-sm"
+        >
+          <FileSpreadsheet size={16} /> Export CSV
+        </button>
+      </Toolbar>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[760px] text-left text-sm">
+          <thead className="bg-secondary">
+            <tr>
+              {["Customer", "Mobile", "Email", "Status", "Registered", "Last login"].map(
+                (label) => (
+                  <th key={label} className="p-3">
+                    {label}
+                  </th>
+                ),
+              )}
+            </tr>
+          </thead>
+          <tbody>
+            {shown.map((row) => (
+              <tr key={String(row.id)} className="border-b">
+                <td className="p-3 font-medium">{String(row.full_name)}</td>
+                <td className="p-3">{String(row.mobile)}</td>
+                <td className="p-3">{String(row.email)}</td>
+                <td className="p-3 capitalize">{String(row.status)}</td>
+                <td className="p-3">{new Date(String(row.created_at)).toLocaleString("en-IN")}</td>
+                <td className="p-3">
+                  {row.last_login_at
+                    ? new Date(String(row.last_login_at)).toLocaleString("en-IN")
+                    : "Not yet"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {!shown.length ? (
+          <p className="py-8 text-center text-sm text-muted-foreground">
+            No retail customers found.
+          </p>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+const retailOrderStatuses = [
+  "payment_pending",
+  "placed",
+  "confirmed",
+  "packed",
+  "shipped",
+  "delivered",
+  "cancelled",
+] as const;
+const retailPaymentStatuses = ["pending", "paid", "cod", "failed", "refunded"] as const;
+
+function RetailOrders({ rows, refresh }: { rows: Row[]; refresh: () => Promise<void> }) {
+  const [query, setQuery] = useState("");
+  const shown = rows.filter((row) =>
+    `${row["order_number"]} ${row["customer_name"]} ${row.email} ${row.mobile}`
+      .toLowerCase()
+      .includes(query.toLowerCase()),
+  );
+  const save = async (row: Row, status: string, paymentStatus: string) => {
+    try {
+      await updateRetailOrderStatus({
+        data: {
+          orderId: Number(row.id),
+          status: status as (typeof retailOrderStatuses)[number],
+          paymentStatus: paymentStatus as (typeof retailPaymentStatuses)[number],
+        },
+      });
+      toast.success("Order updated.");
+      await refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not update the order.");
+    }
+  };
+  return (
+    <section>
+      <Title title="Retail Orders" count={shown.length} />
+      <Toolbar query={query} setQuery={setQuery}>
+        <button
+          onClick={() => exportCsv("retail-orders.csv", shown)}
+          className="inline-flex items-center gap-2 rounded-md border px-3 text-sm"
+        >
+          <FileSpreadsheet size={16} /> Export CSV
+        </button>
+      </Toolbar>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[1100px] text-left text-sm">
+          <thead className="bg-secondary">
+            <tr>
+              {[
+                "Order",
+                "Customer",
+                "Items",
+                "Payment",
+                "Total",
+                "Order status",
+                "Payment status",
+                "Created",
+              ].map((label) => (
+                <th key={label} className="p-3">
+                  {label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {shown.map((row) => (
+              <tr key={String(row.id)} className="border-b align-top">
+                <td className="p-3 font-medium">{String(row["order_number"])}</td>
+                <td className="p-3">
+                  <span className="block font-medium">{String(row["customer_name"])}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {String(row.mobile)} · {String(row.email)}
+                  </span>
+                </td>
+                <td className="p-3">{String(row["item_count"])}</td>
+                <td className="p-3 uppercase">{String(row["payment_method"])}</td>
+                <td className="p-3 font-medium">{money(row["grand_total"])}</td>
+                <td className="p-3">
+                  <select
+                    value={String(row.status)}
+                    onChange={(event) =>
+                      void save(row, event.target.value, String(row["payment_status"]))
+                    }
+                    className="h-9 rounded-md border border-border bg-background px-2 capitalize"
+                  >
+                    {retailOrderStatuses.map((status) => (
+                      <option key={status} value={status}>
+                        {status.replaceAll("_", " ")}
+                      </option>
+                    ))}
+                  </select>
+                </td>
+                <td className="p-3">
+                  <select
+                    value={String(row["payment_status"])}
+                    onChange={(event) => void save(row, String(row.status), event.target.value)}
+                    className="h-9 rounded-md border border-border bg-background px-2 capitalize"
+                  >
+                    {retailPaymentStatuses.map((status) => (
+                      <option key={status} value={status}>
+                        {status}
+                      </option>
+                    ))}
+                  </select>
+                </td>
+                <td className="p-3">{new Date(String(row.created_at)).toLocaleString("en-IN")}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {!shown.length ? (
+          <p className="py-8 text-center text-sm text-muted-foreground">No retail orders found.</p>
+        ) : null}
+      </div>
+    </section>
   );
 }
 
@@ -603,9 +838,32 @@ function Quotations({ data, refresh }: { data: AdminData; refresh: () => Promise
   );
 }
 
-function Products({ rows, refresh }: { rows: Row[]; refresh: () => Promise<void> }) {
+function Products({
+  rows,
+  images,
+  refresh,
+}: {
+  rows: Row[];
+  images: Row[];
+  refresh: () => Promise<void>;
+}) {
   const [editing, setEditing] = useState<Row | null>(null);
   const [query, setQuery] = useState("");
+  const fieldValues: Row = editing
+    ? {
+        ...editing,
+        retailPrice: editing.retail_price,
+        mrp: editing["mrp"] ?? editing.retail_price,
+        wholesalePrice: editing.wholesale_price,
+        gstRate: editing["gst_rate"] ?? 18,
+        minimumQuantity: editing.minimum_quantity,
+        sizeLabel: editing["size_label"] ?? "Medium",
+        potSize: editing["pot_size"] ?? "6 inch",
+        potType: editing["pot_type"] ?? "Nursery Pot",
+        water: editing["water_requirement"] ?? "Medium",
+        reviewCount: editing["review_count"] ?? 0,
+      }
+    : {};
   const shown = rows.filter((row) =>
     `${row.name} ${row.sku} ${row.category}`.toLowerCase().includes(query.toLowerCase()),
   );
@@ -630,12 +888,35 @@ function Products({ rows, refresh }: { rows: Row[]; refresh: () => Promise<void>
         description: String(form.get("description")),
         image: String(form.get("image")),
         retailPrice: Number(form.get("retailPrice")),
+        mrp: Number(form.get("mrp")),
         wholesalePrice: Number(form.get("wholesalePrice")),
         gstRate: Number(form.get("gstRate")),
         minimumQuantity: Number(form.get("minimumQuantity")),
         stock: Number(form.get("stock")),
         active: form.get("active") === "on",
         featured: form.get("featured") === "on",
+        isNew: form.get("isNew") === "on",
+        wholesaleEnabled: form.get("wholesaleEnabled") === "on",
+        botanical: String(form.get("botanical")),
+        sunlight: String(form.get("sunlight")) as
+          "Bright Indirect" | "Full Sun" | "Partial Shade" | "Low Light",
+        water: String(form.get("water")) as "Low" | "Medium" | "High",
+        sizeLabel: String(form.get("sizeLabel")) as "Small" | "Medium" | "Large",
+        potSize: String(form.get("potSize")),
+        potType: String(form.get("potType")),
+        placement: String(form.get("placement")) as "Indoor" | "Outdoor",
+        petSafe: form.get("petSafe") === "on",
+        difficulty: String(form.get("difficulty")) as "Easy" | "Moderate",
+        rating: Number(form.get("rating")),
+        reviewCount: Number(form.get("reviewCount")),
+        care: String(form.get("care"))
+          .split("\n")
+          .map((item) => item.trim())
+          .filter(Boolean),
+        groups: String(form.get("groups"))
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean),
         images,
       },
     });
@@ -663,12 +944,35 @@ function Products({ rows, refresh }: { rows: Row[]; refresh: () => Promise<void>
                 description: item["description"] ?? "",
                 image: item["image"] ?? "",
                 retailPrice: Number(item["retail_price"] ?? 0),
+                mrp: Number(item["mrp"] ?? item["retail_price"] ?? 0),
                 wholesalePrice: Number(item["wholesale_price"] ?? 0),
                 gstRate: Number(item["gst_rate"] ?? 18),
                 minimumQuantity: Number(item["minimum_quantity"] ?? 1),
                 stock: Number(item["stock"] ?? 0),
                 active: item["active"] !== "false" && item["active"] !== "0",
                 featured: item["featured"] === "true" || item["featured"] === "1",
+                isNew: item["is_new"] === "true" || item["is_new"] === "1",
+                wholesaleEnabled:
+                  item["wholesale_enabled"] !== "false" && item["wholesale_enabled"] !== "0",
+                botanical: item["botanical"] ?? "",
+                sunlight: (item["sunlight"] || "Bright Indirect") as "Bright Indirect",
+                water: (item["water"] || "Medium") as "Medium",
+                sizeLabel: (item["size"] || "Medium") as "Medium",
+                potSize: item["pot_size"] || "6 inch",
+                potType: item["pot_type"] || "Nursery Pot",
+                placement: (item["placement"] || "Indoor") as "Indoor",
+                petSafe: item["pet_safe"] !== "false" && item["pet_safe"] !== "0",
+                difficulty: (item["difficulty"] || "Easy") as "Easy",
+                rating: Number(item["rating"] || 4.5),
+                reviewCount: Number(item["review_count"] || 0),
+                care: (item["care"] || "")
+                  .split("|")
+                  .map((value) => value.trim())
+                  .filter(Boolean),
+                groups: (item["groups"] || "")
+                  .split(",")
+                  .map((value) => value.trim())
+                  .filter(Boolean),
               },
             });
           }
@@ -692,16 +996,54 @@ function Products({ rows, refresh }: { rows: Row[]; refresh: () => Promise<void>
         description: String(row.description ?? ""),
         image: String(row["image"] ?? ""),
         retailPrice: Number(row.retail_price),
+        mrp: Number(row["mrp"] ?? row.retail_price),
         wholesalePrice: Number(row.wholesale_price),
         gstRate: Number(row["gst_rate"] ?? 18),
         minimumQuantity: Number(row.minimum_quantity),
         stock: Number(row.stock),
         active: false,
         featured: Boolean(row.featured),
+        isNew: Boolean(row["is_new"]),
+        wholesaleEnabled: Boolean(row["wholesale_enabled"]),
+        botanical: String(row["botanical"] ?? ""),
+        sunlight: String(row["sunlight"] ?? "Bright Indirect") as "Bright Indirect",
+        water: String(row["water_requirement"] ?? "Medium") as "Medium",
+        sizeLabel: String(row["size_label"] ?? "Medium") as "Medium",
+        potSize: String(row["pot_size"] ?? "6 inch"),
+        potType: String(row["pot_type"] ?? "Nursery Pot"),
+        placement: String(row["placement"] ?? "Indoor") as "Indoor",
+        petSafe: Boolean(row["pet_safe"]),
+        difficulty: String(row["difficulty"] ?? "Easy") as "Easy",
+        rating: Number(row["rating"] ?? 4.5),
+        reviewCount: Number(row["review_count"] ?? 0),
+        care: parseList(row["care_instructions"]),
+        groups: parseList(row["product_groups"]),
         images: [],
       },
     });
     toast.success("Product deactivated.");
+    await refresh();
+  };
+  const remove = async (row: Row) => {
+    if (!window.confirm(`Delete ${String(row.name)}? Referenced products will be safely archived.`))
+      return;
+    const result = await deleteProduct({ data: { productId: Number(row.id) } });
+    toast.success(
+      result.archived ? "Product archived because it has quotation history." : "Product deleted.",
+    );
+    await refresh();
+  };
+  const moveImage = async (productId: number, imageId: number, direction: -1 | 1) => {
+    const ordered = images
+      .filter((image) => Number(image["product_id"]) === productId)
+      .sort((a, b) => Number(a["sort_order"]) - Number(b["sort_order"]));
+    const index = ordered.findIndex((image) => Number(image.id) === imageId);
+    const target = index + direction;
+    if (index < 0 || target < 0 || target >= ordered.length) return;
+    [ordered[index], ordered[target]] = [ordered[target]!, ordered[index]!];
+    await reorderProductImages({
+      data: { productId, imageIds: ordered.map((image) => Number(image.id)) },
+    });
     await refresh();
   };
   return (
@@ -740,11 +1082,17 @@ function Products({ rows, refresh }: { rows: Row[]; refresh: () => Promise<void>
               ["slug", "Slug", "text"],
               ["category", "Category", "text"],
               ["retailPrice", "Retail price", "number"],
+              ["mrp", "MRP / compare price", "number"],
               ["wholesalePrice", "Wholesale price", "number"],
               ["gstRate", "GST rate", "number"],
               ["minimumQuantity", "Minimum quantity", "number"],
               ["stock", "Stock", "number"],
               ["image", "Image path", "text"],
+              ["botanical", "Botanical name", "text"],
+              ["potSize", "Pot size", "text"],
+              ["potType", "Pot type", "text"],
+              ["rating", "Rating (0-5)", "number"],
+              ["reviewCount", "Review count", "number"],
             ] as [string, string, string][]
           ).map(([name, label, type]) => (
             <label key={name} className="text-xs">
@@ -752,10 +1100,33 @@ function Products({ rows, refresh }: { rows: Row[]; refresh: () => Promise<void>
               <input
                 name={name}
                 type={type}
-                defaultValue={String(editing[name] ?? (name === "gstRate" ? 18 : ""))}
+                defaultValue={String(
+                  fieldValues[name] ?? (name === "gstRate" ? 18 : name === "rating" ? 4.5 : ""),
+                )}
                 className="mt-1 h-10 w-full rounded-md border px-3 text-sm"
-                required
+                required={name !== "image" && name !== "botanical"}
+                step={type === "number" ? "any" : undefined}
               />
+            </label>
+          ))}
+          {[
+            ["sunlight", "Sunlight", ["Bright Indirect", "Full Sun", "Partial Shade", "Low Light"]],
+            ["water", "Water requirement", ["Low", "Medium", "High"]],
+            ["sizeLabel", "Plant size", ["Small", "Medium", "Large"]],
+            ["placement", "Placement", ["Indoor", "Outdoor"]],
+            ["difficulty", "Difficulty", ["Easy", "Moderate"]],
+          ].map(([name, label, options]) => (
+            <label key={String(name)} className="text-xs">
+              {String(label)}
+              <select
+                name={String(name)}
+                defaultValue={String(fieldValues[String(name)] ?? options?.[0])}
+                className="mt-1 h-10 w-full rounded-md border px-3 text-sm"
+              >
+                {(options as string[]).map((option) => (
+                  <option key={option}>{option}</option>
+                ))}
+              </select>
             </label>
           ))}
           <label className="text-xs sm:col-span-2 lg:col-span-3">
@@ -765,6 +1136,23 @@ function Products({ rows, refresh }: { rows: Row[]; refresh: () => Promise<void>
               defaultValue={String(editing.description ?? "")}
               className="mt-1 w-full rounded-md border p-3 text-sm"
               rows={2}
+            />
+          </label>
+          <label className="text-xs sm:col-span-2 lg:col-span-3">
+            Care instructions (one per line)
+            <textarea
+              name="care"
+              defaultValue={parseList(editing["care_instructions"]).join("\n")}
+              className="mt-1 w-full rounded-md border p-3 text-sm"
+              rows={3}
+            />
+          </label>
+          <label className="text-xs sm:col-span-2 lg:col-span-3">
+            Groups (comma separated: new, bestsellers, essentials...)
+            <input
+              name="groups"
+              defaultValue={parseList(editing["product_groups"]).join(", ")}
+              className="mt-1 h-10 w-full rounded-md border px-3 text-sm"
             />
           </label>
           <label className="text-xs sm:col-span-2 lg:col-span-3">
@@ -789,6 +1177,76 @@ function Products({ rows, refresh }: { rows: Row[]; refresh: () => Promise<void>
             <input name="featured" type="checkbox" defaultChecked={Boolean(editing.featured)} />
             Featured
           </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input name="isNew" type="checkbox" defaultChecked={Boolean(editing["is_new"])} /> New
+            arrival
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              name="wholesaleEnabled"
+              type="checkbox"
+              defaultChecked={
+                editing["wholesale_enabled"] === undefined || Boolean(editing["wholesale_enabled"])
+              }
+            />{" "}
+            Wholesale enabled
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              name="petSafe"
+              type="checkbox"
+              defaultChecked={editing["pet_safe"] === undefined || Boolean(editing["pet_safe"])}
+            />{" "}
+            Pet safe
+          </label>
+          {editing.id ? (
+            <div className="sm:col-span-2 lg:col-span-3">
+              <p className="mb-2 text-xs font-medium">Existing images</p>
+              <div className="flex flex-wrap gap-3">
+                {images
+                  .filter((image) => Number(image["product_id"]) === Number(editing.id))
+                  .map((image) => (
+                    <div key={String(image.id)} className="relative">
+                      <img
+                        src={String(image["path"])}
+                        alt=""
+                        className="h-20 w-20 rounded-md border object-cover"
+                      />
+                      <button
+                        type="button"
+                        aria-label="Delete image"
+                        onClick={async () => {
+                          if (!window.confirm("Delete this image?")) return;
+                          await deleteProductImage({ data: { imageId: Number(image.id) } });
+                          await refresh();
+                        }}
+                        className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-white"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                      <div className="mt-1 flex justify-center gap-1">
+                        <button
+                          type="button"
+                          aria-label="Move image left"
+                          onClick={() => moveImage(Number(editing.id), Number(image.id), -1)}
+                          className="rounded border px-2 text-xs"
+                        >
+                          ←
+                        </button>
+                        <button
+                          type="button"
+                          aria-label="Move image right"
+                          onClick={() => moveImage(Number(editing.id), Number(image.id), 1)}
+                          className="rounded border px-2 text-xs"
+                        >
+                          →
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          ) : null}
           <div className="flex gap-2">
             <button className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground">
               Save
@@ -831,14 +1289,15 @@ function Products({ rows, refresh }: { rows: Row[]; refresh: () => Promise<void>
                 <td className="p-3 font-medium">
                   <div className="flex min-w-[220px] items-center gap-3">
                     <img
-                      src={String(row.display_image || row.image || "")}
+                      src={String(row["display_image"] || row["image"] || "")}
                       alt=""
                       className="h-12 w-12 shrink-0 rounded-md border bg-secondary/40 object-contain"
                     />
                     <div>
                       <p>{String(row.name)}</p>
                       <p className="mt-0.5 text-xs font-normal text-muted-foreground">
-                        {Number(row.image_count || 0)} {Number(row.image_count || 0) === 1 ? "image" : "images"}
+                        {Number(row["image_count"] || 0)}{" "}
+                        {Number(row["image_count"] || 0) === 1 ? "image" : "images"}
                       </p>
                     </div>
                   </div>
@@ -859,6 +1318,417 @@ function Products({ rows, refresh }: { rows: Row[]; refresh: () => Promise<void>
                         Deactivate
                       </button>
                     ) : null}
+                    <button onClick={() => remove(row)} className="text-destructive">
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+function Categories({ rows, refresh }: { rows: Row[]; refresh: () => Promise<void> }) {
+  const [editing, setEditing] = useState<Row | null>(null);
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    await saveCategory({
+      data: {
+        id: editing?.id ? Number(editing.id) : undefined,
+        name: String(form.get("name")),
+        slug: String(form.get("slug")),
+        description: String(form.get("description")),
+        image: String(form.get("image")),
+        sortOrder: Number(form.get("sortOrder")),
+        active: form.get("active") === "on",
+      },
+    });
+    toast.success("Category saved.");
+    setEditing(null);
+    await refresh();
+  };
+  return (
+    <section>
+      <Title title="Category Management" count={rows.length} />
+      <div className="mb-5 flex justify-end">
+        <button
+          onClick={() => setEditing({})}
+          className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground"
+        >
+          Add category
+        </button>
+      </div>
+      {editing ? (
+        <form onSubmit={submit} className="mb-6 grid gap-3 border-y py-5 sm:grid-cols-2">
+          <label className="text-xs">
+            Name
+            <input
+              name="name"
+              required
+              defaultValue={String(editing.name ?? "")}
+              className="mt-1 h-10 w-full rounded-md border px-3"
+            />
+          </label>
+          <label className="text-xs">
+            Slug
+            <input
+              name="slug"
+              required
+              pattern="[a-z0-9-]+"
+              defaultValue={String(editing["slug"] ?? "")}
+              className="mt-1 h-10 w-full rounded-md border px-3"
+            />
+          </label>
+          <label className="text-xs">
+            Image path
+            <input
+              name="image"
+              defaultValue={String(editing["image"] ?? "")}
+              className="mt-1 h-10 w-full rounded-md border px-3"
+            />
+          </label>
+          <label className="text-xs">
+            Sort order
+            <input
+              name="sortOrder"
+              type="number"
+              min="0"
+              required
+              defaultValue={String(editing["sort_order"] ?? 0)}
+              className="mt-1 h-10 w-full rounded-md border px-3"
+            />
+          </label>
+          <label className="text-xs sm:col-span-2">
+            Description
+            <textarea
+              name="description"
+              rows={3}
+              defaultValue={String(editing.description ?? "")}
+              className="mt-1 w-full rounded-md border p-3"
+            />
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              name="active"
+              type="checkbox"
+              defaultChecked={editing.active === undefined || Boolean(editing.active)}
+            />{" "}
+            Active
+          </label>
+          <div className="flex gap-2">
+            <button className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground">
+              Save
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditing(null)}
+              className="rounded-md border px-4 py-2 text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      ) : null}
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-sm">
+          <thead className="bg-secondary">
+            <tr>
+              {["Name", "Slug", "Products", "Order", "State", ""].map((h) => (
+                <th key={h} className="p-3">
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={String(row.id)} className="border-b">
+                <td className="p-3 font-medium">{String(row.name)}</td>
+                <td className="p-3">{String(row["slug"])}</td>
+                <td className="p-3">{String(row.product_count ?? 0)}</td>
+                <td className="p-3">{String(row["sort_order"] ?? 0)}</td>
+                <td className="p-3">{row.active ? "Active" : "Inactive"}</td>
+                <td className="p-3">
+                  <div className="flex gap-3">
+                    <button onClick={() => setEditing(row)} className="text-primary">
+                      Edit
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (
+                          !window.confirm(
+                            `Delete ${String(row.name)}? Categories containing products will be deactivated.`,
+                          )
+                        )
+                          return;
+                        const result = await deleteCategory({
+                          data: { categoryId: Number(row.id) },
+                        });
+                        toast.success(
+                          result.archived
+                            ? "Category deactivated because it contains products."
+                            : "Category deleted.",
+                        );
+                        await refresh();
+                      }}
+                      className="text-destructive"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+function Offers({
+  rows,
+  products,
+  categories,
+  refresh,
+}: {
+  rows: Row[];
+  products: Row[];
+  categories: Row[];
+  refresh: () => Promise<void>;
+}) {
+  const [editing, setEditing] = useState<Row | null>(null);
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    await saveOffer({
+      data: {
+        id: editing?.id ? Number(editing.id) : undefined,
+        name: String(form.get("name")),
+        description: String(form.get("description")),
+        offerType: String(form.get("offerType")) as "percentage" | "fixed" | "buy_x_get_percentage",
+        discountValue: Number(form.get("discountValue")),
+        buyQuantity: Number(form.get("buyQuantity")),
+        rewardQuantity: Number(form.get("rewardQuantity")),
+        categoryId: form.get("categoryId") ? Number(form.get("categoryId")) : null,
+        productIds: form.getAll("productIds").map(Number),
+        startsAt: form.get("startsAt")
+          ? String(form.get("startsAt")).replace("T", " ") + ":00"
+          : null,
+        endsAt: form.get("endsAt") ? String(form.get("endsAt")).replace("T", " ") + ":00" : null,
+        active: form.get("active") === "on",
+      },
+    });
+    toast.success("Offer saved.");
+    setEditing(null);
+    await refresh();
+  };
+  const selected = editing
+    ? String(editing["product_ids"] ?? "")
+        .split(",")
+        .filter(Boolean)
+        .map(Number)
+    : [];
+  const dateValue = (value: unknown) => (value ? String(value).replace(" ", "T").slice(0, 16) : "");
+  return (
+    <section>
+      <Title title="Offer Management" count={rows.length} />
+      <div className="mb-5 flex justify-end">
+        <button
+          onClick={() => setEditing({})}
+          className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground"
+        >
+          Add offer
+        </button>
+      </div>
+      {editing ? (
+        <form
+          onSubmit={submit}
+          className="mb-6 grid gap-3 border-y py-5 sm:grid-cols-2 lg:grid-cols-3"
+        >
+          <label className="text-xs">
+            Offer name
+            <input
+              name="name"
+              required
+              defaultValue={String(editing.name ?? "")}
+              className="mt-1 h-10 w-full rounded-md border px-3"
+            />
+          </label>
+          <label className="text-xs">
+            Type
+            <select
+              name="offerType"
+              defaultValue={String(editing["offer_type"] ?? "percentage")}
+              className="mt-1 h-10 w-full rounded-md border px-3"
+            >
+              <option value="percentage">Percentage discount</option>
+              <option value="fixed">Fixed amount discount</option>
+              <option value="buy_x_get_percentage">Buy X, discount next items</option>
+            </select>
+          </label>
+          <label className="text-xs">
+            Discount value (% or Rs.)
+            <input
+              name="discountValue"
+              type="number"
+              min="0"
+              step="any"
+              required
+              defaultValue={String(editing["discount_value"] ?? 0)}
+              className="mt-1 h-10 w-full rounded-md border px-3"
+            />
+          </label>
+          <label className="text-xs">
+            Buy quantity
+            <input
+              name="buyQuantity"
+              type="number"
+              min="1"
+              required
+              defaultValue={String(editing["buy_quantity"] ?? 2)}
+              className="mt-1 h-10 w-full rounded-md border px-3"
+            />
+          </label>
+          <label className="text-xs">
+            Discounted quantity
+            <input
+              name="rewardQuantity"
+              type="number"
+              min="1"
+              required
+              defaultValue={String(editing["reward_quantity"] ?? 1)}
+              className="mt-1 h-10 w-full rounded-md border px-3"
+            />
+          </label>
+          <label className="text-xs">
+            Category (optional)
+            <select
+              name="categoryId"
+              defaultValue={String(editing["category_id"] ?? "")}
+              className="mt-1 h-10 w-full rounded-md border px-3"
+            >
+              <option value="">All categories</option>
+              {categories.map((category) => (
+                <option key={String(category.id)} value={String(category.id)}>
+                  {String(category.name)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-xs">
+            Starts at
+            <input
+              name="startsAt"
+              type="datetime-local"
+              defaultValue={dateValue(editing["starts_at"])}
+              className="mt-1 h-10 w-full rounded-md border px-3"
+            />
+          </label>
+          <label className="text-xs">
+            Ends at
+            <input
+              name="endsAt"
+              type="datetime-local"
+              defaultValue={dateValue(editing["ends_at"])}
+              className="mt-1 h-10 w-full rounded-md border px-3"
+            />
+          </label>
+          <label className="text-xs sm:col-span-2 lg:col-span-3">
+            Specific products (optional; overrides category)
+            <select
+              name="productIds"
+              multiple
+              defaultValue={selected.map(String)}
+              className="mt-1 h-40 w-full rounded-md border p-2"
+            >
+              {products
+                .filter((p) => !p["deleted_at"])
+                .map((product) => (
+                  <option key={String(product.id)} value={String(product.id)}>
+                    {String(product.sku)} — {String(product.name)}
+                  </option>
+                ))}
+            </select>
+            <span className="text-muted-foreground">Use Ctrl/Cmd to select multiple products.</span>
+          </label>
+          <label className="text-xs sm:col-span-2 lg:col-span-3">
+            Description
+            <textarea
+              name="description"
+              rows={2}
+              defaultValue={String(editing.description ?? "")}
+              className="mt-1 w-full rounded-md border p-3"
+            />
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              name="active"
+              type="checkbox"
+              defaultChecked={editing.active === undefined || Boolean(editing.active)}
+            />{" "}
+            Active
+          </label>
+          <div className="flex gap-2">
+            <button className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground">
+              Save
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditing(null)}
+              className="rounded-md border px-4 py-2 text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      ) : null}
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[760px] text-left text-sm">
+          <thead className="bg-secondary">
+            <tr>
+              {["Offer", "Type", "Value", "Scope", "Schedule", "State", ""].map((h) => (
+                <th key={h} className="p-3">
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={String(row.id)} className="border-b">
+                <td className="p-3 font-medium">{String(row.name)}</td>
+                <td className="p-3">{String(row["offer_type"])}</td>
+                <td className="p-3">{String(row["discount_value"])}</td>
+                <td className="p-3">
+                  {row["product_ids"]
+                    ? `${String(row["product_ids"]).split(",").length} products`
+                    : String(row.category ?? "All products")}
+                </td>
+                <td className="p-3 text-xs">
+                  {String(row["starts_at"] ?? "Now")} — {String(row["ends_at"] ?? "No end")}
+                </td>
+                <td className="p-3">{row.active ? "Active" : "Inactive"}</td>
+                <td className="p-3">
+                  <div className="flex gap-3">
+                    <button onClick={() => setEditing(row)} className="text-primary">
+                      Edit
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (!window.confirm(`Delete ${String(row.name)}?`)) return;
+                        await deleteOffer({ data: { offerId: Number(row.id) } });
+                        toast.success("Offer deleted.");
+                        await refresh();
+                      }}
+                      className="text-destructive"
+                    >
+                      Delete
+                    </button>
                   </div>
                 </td>
               </tr>

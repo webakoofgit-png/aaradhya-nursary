@@ -33,16 +33,16 @@ type PdfItem = {
 };
 
 export async function ensureQuotationPdf(quotationId: number) {
-  const quotation = db
+  const quotation = (await db
     .prepare(
       `SELECT q.*,c.full_name,c.business_name,c.mobile,c.email,c.business_address,c.city,c.state,c.pin_code,c.gst_number
       FROM quotations q JOIN b2b_customers c ON c.id=q.customer_id WHERE q.id=?`,
     )
-    .get(quotationId) as PdfQuotation | undefined;
+    .get(quotationId)) as PdfQuotation | undefined;
   if (!quotation) throw new Error("Quotation not found.");
-  const items = db
+  const items = (await db
     .prepare("SELECT * FROM quotation_items WHERE quotation_id=? ORDER BY id")
-    .all(quotationId) as PdfItem[];
+    .all(quotationId)) as PdfItem[];
   const pdfDir = join(process.cwd(), ".data", "quotations");
   mkdirSync(pdfDir, { recursive: true });
   const path = join(pdfDir, `${quotation.quotation_number}.pdf`);
@@ -192,6 +192,6 @@ export async function ensureQuotationPdf(quotationId: number) {
   document.end();
   const buffer = await complete;
   writeFileSync(path, buffer, { mode: 0o600 });
-  db.prepare("UPDATE quotations SET pdf_path=? WHERE id=?").run(path, quotationId);
+  await db.prepare("UPDATE quotations SET pdf_path=? WHERE id=?").run(path, quotationId);
   return { quotation, items, path, buffer };
 }

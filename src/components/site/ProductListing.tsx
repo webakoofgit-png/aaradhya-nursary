@@ -106,7 +106,7 @@ export function ProductListing({
       if (filters.inStockOnly && !p.inStock) return false;
       if (p.rating < filters.minRating) return false;
       if (filters.channel.includes("Wholesale") && !p.wholesale) return false;
-      if (filters.discounted && (p.mrp - p.price) / p.mrp < 0.3) return false;
+      if (filters.discounted && !p.offerId && (p.mrp - p.price) / p.mrp < 0.3) return false;
       if (filters.newOnly && !p.groups.includes("new")) return false;
       return true;
     });
@@ -115,7 +115,8 @@ export function ProductListing({
     if (sort === "price-asc") out.sort((a, b) => priceOf(a) - priceOf(b));
     if (sort === "price-desc") out.sort((a, b) => priceOf(b) - priceOf(a));
     if (sort === "rating") out.sort((a, b) => b.rating - a.rating);
-    if (sort === "newest") out.sort((a, b) => Number(b.groups.includes("new")) - Number(a.groups.includes("new")));
+    if (sort === "newest")
+      out.sort((a, b) => Number(b.groups.includes("new")) - Number(a.groups.includes("new")));
     return out;
   }, [items, filters, sort, priceOf]);
 
@@ -163,49 +164,82 @@ export function ProductListing({
       <fieldset>
         <legend className="mb-1 text-sm font-semibold">Indoor / Outdoor</legend>
         {["Indoor", "Outdoor"].map((v) => (
-          <Check key={v} label={v} checked={filters.placement.includes(v)} onChange={() => toggle("placement", v)} />
+          <Check
+            key={v}
+            label={v}
+            checked={filters.placement.includes(v)}
+            onChange={() => toggle("placement", v)}
+          />
         ))}
       </fieldset>
 
       <fieldset>
         <legend className="mb-1 text-sm font-semibold">Sunlight</legend>
         {["Bright Indirect", "Full Sun", "Partial Shade", "Low Light"].map((v) => (
-          <Check key={v} label={v} checked={filters.sunlight.includes(v)} onChange={() => toggle("sunlight", v)} />
+          <Check
+            key={v}
+            label={v}
+            checked={filters.sunlight.includes(v)}
+            onChange={() => toggle("sunlight", v)}
+          />
         ))}
       </fieldset>
 
       <fieldset>
         <legend className="mb-1 text-sm font-semibold">Water Requirement</legend>
         {["Low", "Medium", "High"].map((v) => (
-          <Check key={v} label={v} checked={filters.water.includes(v)} onChange={() => toggle("water", v)} />
+          <Check
+            key={v}
+            label={v}
+            checked={filters.water.includes(v)}
+            onChange={() => toggle("water", v)}
+          />
         ))}
       </fieldset>
 
       <fieldset>
         <legend className="mb-1 text-sm font-semibold">Plant Size</legend>
         {["Small", "Medium", "Large"].map((v) => (
-          <Check key={v} label={v} checked={filters.size.includes(v)} onChange={() => toggle("size", v)} />
+          <Check
+            key={v}
+            label={v}
+            checked={filters.size.includes(v)}
+            onChange={() => toggle("size", v)}
+          />
         ))}
       </fieldset>
 
       <fieldset>
         <legend className="mb-1 text-sm font-semibold">Pot Size</legend>
         {potSizes.map((v) => (
-          <Check key={v} label={v} checked={filters.potSize.includes(v)} onChange={() => toggle("potSize", v)} />
+          <Check
+            key={v}
+            label={v}
+            checked={filters.potSize.includes(v)}
+            onChange={() => toggle("potSize", v)}
+          />
         ))}
       </fieldset>
 
       <fieldset>
         <legend className="mb-1 text-sm font-semibold">Buying Channel</legend>
         {["Retail", "Wholesale"].map((v) => (
-          <Check key={v} label={v} checked={filters.channel.includes(v)} onChange={() => toggle("channel", v)} />
+          <Check
+            key={v}
+            label={v}
+            checked={filters.channel.includes(v)}
+            onChange={() => toggle("channel", v)}
+          />
         ))}
       </fieldset>
 
       <fieldset>
         <legend className="mb-1 text-sm font-semibold">Rating</legend>
         {[4.5, 4, 3.5].map((r) => (
-          <label key={r} className="flex cursor-pointer items-center gap-2 py-1 text-sm text-muted-foreground">
+          <label
+            key={r}
+            className="flex cursor-pointer items-center gap-2 py-1 text-sm text-muted-foreground"
+          >
             <input
               type="radio"
               name="rating"
@@ -257,13 +291,16 @@ export function ProductListing({
 
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[260px_minmax(0,1fr)] lg:px-8">
         <aside className="hidden lg:block">
-          <div className="sticky top-40 rounded-2xl border border-border bg-card p-5">{FilterPanel}</div>
+          <div className="sticky top-40 rounded-2xl border border-border bg-card p-5">
+            {FilterPanel}
+          </div>
         </aside>
 
         <div>
           <div className="mb-6 flex flex-wrap items-center gap-3">
             <p className="text-sm text-muted-foreground">
-              Showing <strong className="text-foreground">{Math.min(visible, filtered.length)}</strong> of{" "}
+              Showing{" "}
+              <strong className="text-foreground">{Math.min(visible, filtered.length)}</strong> of{" "}
               {filtered.length} products
             </p>
             <div className="ml-auto flex items-center gap-2">
@@ -294,7 +331,10 @@ export function ProductListing({
                   type="button"
                   aria-label="Grid view"
                   onClick={() => setView("grid")}
-                  className={cn("grid h-10 w-10 place-items-center", view === "grid" && "bg-secondary text-primary")}
+                  className={cn(
+                    "grid h-10 w-10 place-items-center",
+                    view === "grid" && "bg-secondary text-primary",
+                  )}
                 >
                   <LayoutGrid size={16} />
                 </button>
@@ -302,7 +342,10 @@ export function ProductListing({
                   type="button"
                   aria-label="List view"
                   onClick={() => setView("list")}
-                  className={cn("grid h-10 w-10 place-items-center", view === "list" && "bg-secondary text-primary")}
+                  className={cn(
+                    "grid h-10 w-10 place-items-center",
+                    view === "list" && "bg-secondary text-primary",
+                  )}
                 >
                   <List size={16} />
                 </button>
