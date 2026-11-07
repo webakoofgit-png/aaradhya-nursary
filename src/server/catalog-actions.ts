@@ -1,8 +1,33 @@
 import { createServerFn } from "@tanstack/react-start";
-import { db } from "./db";
-import type { Product } from "@/data/catalog";
+import { db, isDatabaseConfigured } from "./db";
+import { products as bundledProducts, type Product } from "@/data/catalog";
 
 type Row = any;
+
+function bundledCatalog() {
+  const categories = Array.from(
+    new Map(
+      bundledProducts.map((product) => [
+        product.categorySlug,
+        {
+          name: product.category,
+          slug: product.categorySlug,
+          description: `Shop ${product.category} from our nursery catalogue.`,
+        },
+      ]),
+    ).values(),
+  );
+
+  return {
+    products: bundledProducts,
+    categories: categories.map((category, index) => ({
+      id: index + 1,
+      ...category,
+      image: null,
+      sortOrder: index,
+    })),
+  };
+}
 
 function jsonArray(value: unknown): string[] {
   if (Array.isArray(value)) return value.map(String);
@@ -16,6 +41,8 @@ function jsonArray(value: unknown): string[] {
 }
 
 export const getRetailCatalog = createServerFn({ method: "GET" }).handler(async () => {
+  if (!isDatabaseConfigured) return bundledCatalog();
+
   const [rows, imageRows, categories, offers, offerProducts] = await Promise.all([
     db
       .prepare(

@@ -7,27 +7,43 @@ import mysql, {
 import { products as retailProducts } from "@/data/catalog";
 
 const databaseUrl = process.env["DATABASE_URL"];
-if (!databaseUrl) throw new Error("DATABASE_URL is required for the MySQL database connection.");
+export const isDatabaseConfigured = Boolean(databaseUrl);
 
-const pool = mysql.createPool({
-  uri: databaseUrl,
-  ...(process.env["DATABASE_SSL"] === "true" ? { ssl: { rejectUnauthorized: true } } : {}),
-  connectionLimit: 10,
-  waitForConnections: true,
-  queueLimit: 0,
-  enableKeepAlive: true,
-  decimalNumbers: true,
-});
+const databaseConfigurationError = () =>
+  new Error(
+    "DATABASE_URL is required for database-backed features. Configure it in the deployment environment.",
+  );
+
+const pool = databaseUrl
+  ? mysql.createPool({
+      uri: databaseUrl,
+      ...(process.env["DATABASE_SSL"] === "true"
+        ? { ssl: { rejectUnauthorized: true } }
+        : {}),
+      connectionLimit: 10,
+      waitForConnections: true,
+      queueLimit: 0,
+      enableKeepAlive: true,
+      decimalNumbers: true,
+    })
+  : null;
 const transactionConnection = new AsyncLocalStorage<PoolConnection>();
-const executor = () => transactionConnection.getStore() ?? pool;
+const executor = () => {
+  const connection = transactionConnection.getStore();
+  if (connection) return connection;
+  if (!pool) throw databaseConfigurationError();
+  return pool;
+};
 
 async function queryRows<T>(sql: string, params: any[]) {
+  if (!pool) throw databaseConfigurationError();
   await databaseReady;
   const [rows] = await executor().execute<RowDataPacket[]>(sql, params);
   return rows as T[];
 }
 
 async function execute(sql: string, params: any[]) {
+  if (!pool) throw databaseConfigurationError();
   await databaseReady;
   const [result] = await executor().execute<ResultSetHeader>(sql, params);
   return {
@@ -54,6 +70,7 @@ export const db = {
   },
   transaction<TArgs extends unknown[], TResult>(callback: (...args: TArgs) => Promise<TResult>) {
     return async (...args: TArgs) => {
+      if (!pool) throw databaseConfigurationError();
       await databaseReady;
       const connection = await pool.getConnection();
       try {
@@ -72,6 +89,7 @@ export const db = {
 };
 
 async function initializeDatabase() {
+  if (!pool) return;
   await pool.execute(
     "INSERT IGNORE INTO system_settings(key_name,value) VALUES ('gst_rate','18'),('delivery_charges','0')",
   );
