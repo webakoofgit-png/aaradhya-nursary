@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { AppLink } from "./AppLink";
 import { Eye, Heart, Minus, Plus, ShoppingCart } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Stars } from "./Stars";
@@ -175,14 +174,6 @@ export function ProductCard({
               <ShoppingCart size={15} /> Add
             </button>
           </div>
-          {product.wholesale ? (
-            <AppLink
-              to="/wholesale/register"
-              className="mt-2 inline-flex h-9 items-center justify-center rounded-full bg-accent px-3 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent/85"
-            >
-              B2B / Wholesale
-            </AppLink>
-          ) : null}
         </div>
       </article>
 

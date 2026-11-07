@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
 import { Heart, Share2, ShieldCheck, ShoppingCart, Truck } from "lucide-react";
 import { Breadcrumbs } from "@/components/site/Breadcrumbs";
-import { AppLink } from "@/components/site/AppLink";
 import { Stars } from "@/components/site/Stars";
 import { ProductCarousel } from "@/components/site/ProductCarousel";
 import {
@@ -261,13 +260,6 @@ function ProductPage() {
                 <Share2 size={17} />
               </button>
             </div>
-            <AppLink
-              to="/wholesale/register"
-              className="mt-4 inline-flex items-center justify-center rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent/85"
-            >
-              B2B / Wholesale
-            </AppLink>
-
             <form
               onSubmit={(e) => {
                 e.preventDefault();

@@ -116,6 +116,12 @@ export function Header() {
         </div>
 
         <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+          <AppLink
+            to="/wholesale"
+            className="hidden h-10 items-center justify-center rounded-full bg-accent px-4 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent/85 sm:inline-flex"
+          >
+            B2B / Wholesale
+          </AppLink>
           <Link
             to="/account"
             aria-label="Account"
@@ -240,12 +246,18 @@ export function Header() {
                   />
                 </form>
 
-                <div className="mb-4">
+                <div className="mb-4 grid grid-cols-2 gap-2">
                   <AppLink
                     to="/category/all"
                     className="block rounded-full bg-primary px-3 py-2.5 text-center text-sm font-medium text-primary-foreground"
                   >
                     Retail Shop
+                  </AppLink>
+                  <AppLink
+                    to="/wholesale"
+                    className="block rounded-full bg-accent px-3 py-2.5 text-center text-sm font-semibold text-accent-foreground"
+                  >
+                    B2B / Wholesale
                   </AppLink>
                 </div>
 
